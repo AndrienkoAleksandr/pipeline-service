@@ -4,6 +4,8 @@ kind: Deployment
 metadata:
   name: pipelines-as-code-controller
   namespace: pipelines-as-code
+  labels:
+    kcp.dev/cluster: local
 spec:
   replicas: 1
   selector:
