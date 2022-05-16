@@ -18,6 +18,7 @@ spec:
       containers:
         - image: ckcp
           name: ckcp
+          imagePullPolicy: Always
           readinessProbe:
             initialDelaySeconds: 20
             periodSeconds: 3
