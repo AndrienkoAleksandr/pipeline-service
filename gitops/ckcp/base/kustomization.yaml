@@ -11,6 +11,6 @@ resources:
 images:
 - name: ckcp
   newName: quay.io/aandriienko/ckcp
-  newTag: 986710c754ed0dac9ae1525661de931e5dd7c0cc
+  newTag: 50e3ab2dcfe2e17dc0bd9d0adf1517e98b59c55d
 
 namespace: ckcp

@@ -9,7 +9,7 @@ source ../local/.utils
 
 detect_container_engine
 
-IMAGE="$KO_DOCKER_REPO/ckcp:986710c754ed0dac9ae1525661de931e5dd7c0cc"
+IMAGE="$KO_DOCKER_REPO/ckcp:50e3ab2dcfe2e17dc0bd9d0adf1517e98b59c55d"
 ${CONTAINER_ENGINE} build -t "$IMAGE" docker/ckcp/
 ${CONTAINER_ENGINE} push "$IMAGE"
 
