@@ -177,12 +177,12 @@ install_ckcp() {
 
   # Check if external ip is assigned and replace kcp's external IP in the kubeconfig file
   echo -n "  - Route: "
-  KCP_POD_IP=$(oc get pods -n ckcp -o jsonpath='{.items[0].status.podIP}')
-  if grep -q "${KCP_POD_IP}" "$KUBECONFIG_KCP"; then
+  # KCP_POD_IP=$(oc get pods -n ckcp -o jsonpath='{.items[0].status.podIP}')
+  if grep -q "localhost" "$KUBECONFIG_KCP"; then
     local route
     route="$(oc get route ckcp -n "$APP" -o jsonpath='{.spec.host}')"
-    yq e -i '.| del(.clusters[].cluster.certificate-authority-data) | (.clusters[].cluster.insecure-skip-tls-verify += true )  | .' "$KUBECONFIG_KCP"
-    yq e -i "(.clusters[].cluster.server) |= sub(\"$KCP_POD_IP:6443\", \"$route:443\")" "$KUBECONFIG_KCP"
+    # yq e -i '.| del(.clusters[].cluster.certificate-authority-data) | (.clusters[].cluster.insecure-skip-tls-verify += true )  | .' "$KUBECONFIG_KCP"
+    yq e -i "(.clusters[].cluster.server) |= sub(\"localhost:6443\", \"$route:443\")" "$KUBECONFIG_KCP"
   fi
   echo "OK"
 

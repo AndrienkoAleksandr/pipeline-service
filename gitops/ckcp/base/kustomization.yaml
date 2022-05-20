@@ -3,23 +3,23 @@ kind: Kustomization
 resources:
 - namespace.yaml
 - pvc.yaml
-- certs.yaml
+# - certs.yaml
 - service.yaml
-- route.yaml
+# - route.yaml
 - rolebinding.yaml
 - serviceaccount.yaml
 - deployment.yaml
 
 patches:
-  - target:
-      kind: Route
-      name: ckcp
-      labelSelector: app=kcp-in-a-pod
-    patch: |-
-      - op: replace
-        path: /spec/host
-        description: Make sure you can use the route with your cluster or change accordingly if not.
-        value: kcp.dev
+  # - target:
+  #     kind: Route
+  #     name: ckcp
+  #     labelSelector: app=kcp-in-a-pod
+  #   patch: |-
+  #     - op: replace
+  #       path: /spec/host
+  #       description: Make sure you can use the route with your cluster or change accordingly if not.
+  #       value: kcp.dev
   - target:
       kind: Deployment
       name: ckcp
