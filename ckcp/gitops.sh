@@ -195,22 +195,21 @@ install_ckcp() {
   done
   echo "OK"
 
-  # Register the host cluster to KCP
-  echo -n "  - Workloadcluster pipeline-cluster registration: "
-  if ! KUBECONFIG="$KUBECONFIG_KCP" oc get cluster local >/dev/null 2>&1; then
-    (
-      curl --fail --silent https://raw.githubusercontent.com/kcp-dev/kcp/948dbe9565cc7da439c698875ca1fa78350c4530/contrib/examples/cluster.yaml
-      sed -e 's/^/    /' "$KUBECONFIG"
-    ) >"$kube_dir/cluster.yaml"
-    KUBECONFIG="$KUBECONFIG_KCP" oc apply -f "$kube_dir/cluster.yaml" >/dev/null
-    rm "$kube_dir/cluster.yaml"
-  fi
-  echo "OK"
-
   echo -n "  - Workspace: "
   if ! KUBECONFIG="$KUBECONFIG_KCP" oc get workspaces demo >/dev/null 2>&1; then
-    KUBECONFIG="$KUBECONFIG_KCP" oc create -f "$SCRIPT_DIR/../workspace.yaml" &>/dev/null
+    KUBECONFIG="$KUBECONFIG_KCP" kubectl kcp workspace create demo --enter
   fi
+  echo "OK"
+  KUBECONFIG="$KUBECONFIG_KCP" kubectl kcp workspace use demo
+
+  # Register the host cluster to KCP
+  echo -n "  - Workloadcluster pipeline-cluster registration: "
+  # KUBECONFIG="$KUBECONFIG_KCP" kubectl get workloadcluster "local" -o wide
+  # if ! KUBECONFIG="$KUBECONFIG_KCP" oc get workloadcluster local >/dev/null 2>&1; then
+    # KUBECONFIG="$KUBECONFIG_KCP" kubectl kcp workload sync "local" --resources ingresses.networking.k8s.io,deployments.apps,services --syncer-image ghcr.io/kcp-dev/kcp/syncer:v0.4.0-alpha.0 > "$kube_dir/cluster.yaml"
+    # KUBECONFIG="$KUBECONFIG_KCP" oc apply -f "$kube_dir/cluster.yaml" >/dev/null
+    # rm "$kube_dir/cluster.yaml"
+  # fi
   echo "OK"
 
   # Register the KCP cluster into ArgoCD

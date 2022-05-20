@@ -1,16 +1,46 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- deployment.yaml
 - namespace.yaml
-- rolebinding.yaml
-- route.yaml
+- pvc.yaml
+- certs.yaml
 - service.yaml
+- route.yaml
+- rolebinding.yaml
 - serviceaccount.yaml
+- deployment.yaml
 
-images:
-- name: ckcp
-  newName: quay.io/aandriienko/ckcp
-  newTag: 50e3ab2dcfe2e17dc0bd9d0adf1517e98b59c55d
+patches:
+  - target:
+      kind: Route
+      name: ckcp
+      labelSelector: app=kcp-in-a-pod
+    patch: |-
+      - op: replace
+        path: /spec/host
+        description: Make sure you can use the route with your cluster or change accordingly if not.
+        value: kcp.dev
+  - target:
+      kind: Deployment
+      name: ckcp
+      labelSelector: app=kcp-in-a-pod
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/0/value
+        description: This value refers to the hostAddress defined above.
+        value: kcp.dev
+  - target:
+      kind: Certificate
+      name: kcp
+    patch: |-
+      - op: add
+        path: /spec/dnsNames/-
+        description: This value refers to the hostAddress defined above.
+        value: kcp.dev
 
 namespace: ckcp
+
+images:
+- name: kcp
+  newName: ghcr.io/kcp-dev/kcp
+  newTag: release-0.4
