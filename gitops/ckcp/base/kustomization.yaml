@@ -11,15 +11,15 @@ resources:
 - deployment.yaml
 
 patches:
-  - target:
-      kind: Route
-      name: ckcp
-      labelSelector: app=kcp-in-a-pod
-    patch: |-
-      - op: replace
-        path: /spec/host
-        description: Make sure you can use the route with your cluster or change accordingly if not.
-        value: kcp.dev
+  # - target:
+  #     kind: Route
+  #     name: ckcp
+  #     labelSelector: app=kcp-in-a-pod
+    # patch: |-
+    #   - op: replace
+    #     path: /spec/host
+    #     description: Make sure you can use the route with your cluster or change accordingly if not.
+    #     value: *.apps.ci-ln-pm62j2t-72292.origin-ci-int-
   - target:
       kind: Deployment
       name: ckcp
@@ -36,7 +36,7 @@ patches:
       - op: add
         path: /spec/dnsNames/-
         description: This value refers to the hostAddress defined above.
-        value: kcp.dev
+        value: *.apps.ci-ln-pm62j2t-72292.origin-ci-int-
 
 namespace: ckcp
 
