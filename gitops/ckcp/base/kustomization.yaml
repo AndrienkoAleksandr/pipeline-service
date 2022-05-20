@@ -4,11 +4,11 @@ resources:
 - namespace.yaml
 - pvc.yaml
 - certs.yaml
-# - service.yaml
-# - route.yaml
+- service.yaml
+- route.yaml
 - rolebinding.yaml
 - serviceaccount.yaml
-# - deployment.yaml
+- deployment.yaml
 
 patches:
   # - target:
