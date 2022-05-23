@@ -43,4 +43,4 @@ namespace: ckcp
 images:
 - name: kcp
   newName: ghcr.io/kcp-dev/kcp
-  newTag: release-0.4
+  newTag: ghcr.io/kcp-dev/kcp/syncer:50e3ab2
