@@ -173,17 +173,17 @@ install_ckcp() {
   #############################################################################
   # Copy the kubeconfig of kcp from inside the pod onto the local filesystem
   podname="$(oc get pods --ignore-not-found -n "$ns" -l=app=kcp-in-a-pod -o jsonpath='{.items[0].metadata.name}')"
-  oc cp "$APP/$podname:/workspace/.kcp/admin.kubeconfig" "$KUBECONFIG_KCP" >/dev/null
+  oc cp "$APP/$podname:/etc/kcp/config/admin.kubeconfig" "$KUBECONFIG_KCP" >/dev/null
 
   # Check if external ip is assigned and replace kcp's external IP in the kubeconfig file
   echo -n "  - Route: "
   # KCP_POD_IP=$(oc get pods -n ckcp -o jsonpath='{.items[0].status.podIP}')
-  if grep -q "localhost" "$KUBECONFIG_KCP"; then
-    local route
-    route="$(oc get route ckcp -n "$APP" -o jsonpath='{.spec.host}')"
-    # yq e -i '.| del(.clusters[].cluster.certificate-authority-data) | (.clusters[].cluster.insecure-skip-tls-verify += true )  | .' "$KUBECONFIG_KCP"
-    yq e -i "(.clusters[].cluster.server) |= sub(\"localhost:6443\", \"$route:443\")" "$KUBECONFIG_KCP"
-  fi
+  # if grep -q "localhost" "$KUBECONFIG_KCP"; then
+    # local route
+    # route="$(oc get route ckcp -n "$APP" -o jsonpath='{.spec.host}')"
+    yq e -i '.| del(.clusters[].cluster.certificate-authority-data) | (.clusters[].cluster.insecure-skip-tls-verify += true )  | .' "$KUBECONFIG_KCP"
+    # yq e -i "(.clusters[].cluster.server) |= sub(\"localhost:6443\", \"$route:443\")" "$KUBECONFIG_KCP"
+  # fi
   echo "OK"
 
   # Make sure access to kcp-in-a-pod is good
@@ -198,18 +198,20 @@ install_ckcp() {
   echo -n "  - Workspace: "
   if ! KUBECONFIG="$KUBECONFIG_KCP" oc get workspaces demo >/dev/null 2>&1; then
     KUBECONFIG="$KUBECONFIG_KCP" kubectl kcp workspace create demo --enter
+  else
+    KUBECONFIG="$KUBECONFIG_KCP" kubectl kcp workspace use demo
   fi
   echo "OK"
-  KUBECONFIG="$KUBECONFIG_KCP" kubectl kcp workspace use demo
 
   # Register the host cluster to KCP
   echo -n "  - Workloadcluster pipeline-cluster registration: "
   # KUBECONFIG="$KUBECONFIG_KCP" kubectl get workloadcluster "local" -o wide
-  # if ! KUBECONFIG="$KUBECONFIG_KCP" oc get workloadcluster local >/dev/null 2>&1; then
-    # KUBECONFIG="$KUBECONFIG_KCP" kubectl kcp workload sync "local" --resources ingresses.networking.k8s.io,deployments.apps,services --syncer-image ghcr.io/kcp-dev/kcp/syncer:v0.4.0-alpha.0 > "$kube_dir/cluster.yaml"
-    # KUBECONFIG="$KUBECONFIG_KCP" oc apply -f "$kube_dir/cluster.yaml" >/dev/null
-    # rm "$kube_dir/cluster.yaml"
-  # fi
+  #if ! KUBECONFIG="$KUBECONFIG_KCP" oc get workloadcluster local >/dev/null 2>&1; then
+    KUBECONFIG="$KUBECONFIG_KCP" kubectl kcp workload sync "local" --resources ingresses.networking.k8s.io,services --syncer-image ghcr.io/kcp-dev/kcp/syncer:v0.4.0-alpha.0 > "$kube_dir/cluster.yaml"
+    # deployments.apps,
+    KUBECONFIG="$KUBECONFIG_KCP" oc apply -f "$kube_dir/cluster.yaml" >/dev/null
+    rm "$kube_dir/cluster.yaml"
+  #fi
   echo "OK"
 
   # Register the KCP cluster into ArgoCD

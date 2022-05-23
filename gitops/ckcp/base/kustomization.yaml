@@ -19,7 +19,7 @@ patches:
       - op: replace
         path: /spec/host
         description: Make sure you can use the route with your cluster or change accordingly if not.
-        value: ckcp-ckcp.apps.ci-ln-xk7nl7t-72292.origin-ci-int-gce.dev.rhcloud.com
+        value: ckcp-ckcp.apps.ci-ln-dys6n3t-72292.origin-ci-int-gce.dev.rhcloud.com
   # - target:
   #     kind: Deployment
   #     name: ckcp
