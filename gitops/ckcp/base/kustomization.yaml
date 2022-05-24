@@ -36,7 +36,7 @@ patches:
       - op: add
         path: /spec/dnsNames/-
         description: This value refers to the hostAddress defined above.
-        value: "*.apps.ci-ln-6f8vpr2-72292.origin-ci-int-"
+        value: "*.apps.ci-ln-6f8vpr2-72292.origin-ci-int-gce.dev.rhcloud.com"
 
 namespace: ckcp
 
