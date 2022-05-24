@@ -206,12 +206,20 @@ install_ckcp() {
   # Register the host cluster to KCP
   echo -n "  - Workloadcluster pipeline-cluster registration: "
   # KUBECONFIG="$KUBECONFIG_KCP" kubectl get workloadcluster "local" -o wide
-  #if ! KUBECONFIG="$KUBECONFIG_KCP" oc get workloadcluster local >/dev/null 2>&1; then
-    KUBECONFIG="$KUBECONFIG_KCP" kubectl kcp workload sync "local" --resources ingresses.networking.k8s.io,services --syncer-image ghcr.io/kcp-dev/kcp/syncer:v0.4.0-alpha.0 > "$kube_dir/cluster.yaml"
-    # deployments.apps,
-    KUBECONFIG="$KUBECONFIG_KCP" oc apply -f "$kube_dir/cluster.yaml" >/dev/null
+  # if ! KUBECONFIG="$KUBECONFIG_KCP" oc get workloadcluster local >/dev/null 2>&1; then
+    #KUBECONFIG="$KUBECONFIG_KCP" kubectl kcp workload sync "local" --resources ingresses.networking.k8s.io,deployments.apps,services --syncer-image ghcr.io/kcp-dev/kcp/syncer:v0.4.0-alpha.0 > "$kube_dir/cluster.yaml"
+    KUBECONFIG="$KUBECONFIG_KCP" /Users/oandriie/projects/kcp/bin/kubectl-kcp workload sync "local" --resources ingresses.networking.k8s.io,deployments.apps,services --syncer-image ghcr.io/kcp-dev/kcp/syncer:2a84a79 > "$kube_dir/cluster.yaml"
+    #crd-puller --kubeconfig "$KUBECONFIG" deployments.apps
+    
+    #/Users/oandriie/projects/kcp/bin/crd-puller --kubeconfig "$KUBECONFIG" deployments
+    #kubectl apply -f deployments.apps.yaml
+    # rm -rf deployments.apps.yaml
+
+    #KUBECONFIG="$KUBECONFIG_KCP" oc apply -f "$kube_dir/cluster.yaml" >/dev/null
+    oc apply -f "$kube_dir/cluster.yaml"
+    # >/dev/null
     rm "$kube_dir/cluster.yaml"
-  #fi
+  # fi
   echo "OK"
 
   # Register the KCP cluster into ArgoCD
