@@ -211,7 +211,7 @@ install_ckcp() {
   # Register the host cluster to KCP
   echo -n "  - Workloadcluster pipeline-cluster registration: "
   if ! KUBECONFIG="$KUBECONFIG_KCP" oc get workloadcluster local >/dev/null 2>&1; then
-    KUBECONFIG="$KUBECONFIG_KCP" /Users/oandriie/projects/kcp/bin/kubectl-kcp workload sync "local" --resources ingresses.networking.k8s.io,deployments.apps,services --syncer-image ghcr.io/kcp-dev/kcp/syncer:release-0.4 > "$kube_dir/cluster.yaml"
+    KUBECONFIG="$KUBECONFIG_KCP" /Users/oandriie/projects/kcp/bin/kubectl-kcp workload sync "local" --resources ingresses.networking.k8s.io,deployments.apps,services --syncer-image ghcr.io/kcp-dev/kcp/syncer:cc241c0 > "$kube_dir/cluster.yaml"
 
     # Set up certificate authority, workload sync doesn't include this data...
     sed -i "s|certificate-authority-data: |certificate-authority-data: ${CERT_AUTHORITY}|" "$kube_dir/cluster.yaml"
@@ -257,7 +257,7 @@ secrets:
     # </workaround>
 
     sed -i'' -e 's:admin$:admin_kcp:g' "$KUBECONFIG_KCP"
-    KUBECONFIG="$KUBECONFIG_MERGED" argocd cluster add workspace.kcp.dev/current --name=kcp --yes >/dev/null 2>&1
+    KUBECONFIG="$KUBECONFIG_MERGED" argocd cluster add workspace.kcp.dev/current --name=kcp --yes >/dev/null 2>&1 || true
   fi
   echo "OK"
 }
@@ -271,7 +271,6 @@ install_pipelines_controller() {
   echo -n "  - Register KCP secret to host cluster: "
   oc create namespace pipelines --dry-run=client -o yaml | oc apply -f - --wait &>/dev/null
   oc create secret generic kcp-kubeconfig -n pipelines --from-file "$KUBECONFIG_KCP" --dry-run=client -o yaml | oc apply -f - --wait &>/dev/null
-  # oc create secret generic kubeconfig -n pipelines --from-file "$KUBECONFIG_KCP" --dry-run=client -o yaml | oc apply -f - --wait &>/dev/null
   echo "OK"
 
   install_app pipelines-controller
@@ -288,9 +287,6 @@ install_triggers_interceptors() {
   oc create secret generic kcp-kubeconfig --from-file "$KUBECONFIG_KCP" --dry-run=client -o yaml | KUBECONFIG="$KUBECONFIG_KCP" oc apply -f - --wait &>/dev/null
   oc create secret generic kcp-kubeconfig -n tekton-pipelines --from-file "$KUBECONFIG_KCP" --dry-run=client -o yaml | KUBECONFIG="$KUBECONFIG_KCP" oc apply -f - --wait &>/dev/null
 
-  # oc create secret generic kubeconfig --from-file "$KUBECONFIG_KCP" --dry-run=client -o yaml | KUBECONFIG="$KUBECONFIG_KCP" oc apply -f - --wait &>/dev/null
-  # oc create secret generic kubeconfig -n tekton-pipelines --from-file "$KUBECONFIG_KCP" --dry-run=client -o yaml | KUBECONFIG="$KUBECONFIG_KCP" oc apply -f - --wait &>/dev/null
-
   install_app triggers-interceptors
 }
 
@@ -299,8 +295,6 @@ install_triggers_controller() {
   oc create namespace triggers -o yaml --dry-run=client | oc apply -f - --wait &>/dev/null
   
   oc create secret generic kcp-kubeconfig -n triggers --from-file "$KUBECONFIG_KCP" --dry-run=client -o yaml | oc apply -f - --wait &>/dev/null
-  
-  # oc create secret generic kubeconfig -n triggers --from-file "$KUBECONFIG_KCP" --dry-run=client -o yaml | oc apply -f - --wait &>/dev/null
 
   install_app triggers-controller
 }
@@ -310,8 +304,6 @@ install_pipelines_as_code_controller() {
   echo -n "  - Register KCP secret to host cluster: "
 
   oc create secret generic kcp-kubeconfig -n pipelines-as-code --from-file "$KUBECONFIG_KCP" --dry-run=client -o yaml | oc apply -f - --wait &>/dev/null
-  
-  # oc create secret generic kubeconfig -n pipelines-as-code --from-file "$KUBECONFIG_KCP" --dry-run=client -o yaml | oc apply -f - --wait &>/dev/null
 
   echo "OK"
 
