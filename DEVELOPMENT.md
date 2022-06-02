@@ -14,13 +14,13 @@ Prerequisites:
 
 ## Workload clusters with kind
 
-[./local/kind/setup.sh](./local/kind/setup.sh) will create two kind clusters and the files to register them so that it is straightforward to add them to the kcp cluster. Kind will also output the kubeconfig files that can be used to interact with the Kubernetes clusters. Simply run:
+[./local/kind/setup.sh](./local/kind/setup.sh) will create two kind clusters and output the kubeconfig files that can be used to interact with the Kubernetes clusters. An amended version of the kubeconfig file with the suffix '_ip' can be used for registering the clusters to Argo CD. A routable IP is used instead of localhost. Simply run:
 
 ```console
 ./local/kind/setup.sh
 ```
 
-By default Argo CD is installed on the first cluster. It is possible to deactivate its installation by setting an environment variable `NO_ARGOCD=true`
+By default Argo CD is installed on both clusters. It is possible to deactivate its installation by setting an environment variable `NO_ARGOCD=true`
 
 ---
 **_NOTES:_**
@@ -53,13 +53,32 @@ The script will output the location of the kubeconfig file that can be used to i
 
 ---
 
+[The kcp registration page](./docs/kcp-registration.md) provides instructions to register workload clusters to kcp.
+
+Here is an example for running the registration image in a development environment:
+~~~
+podman run --env KCP_ORG='root:pipelines-service' --env KCP_WORKSPACE='compute' --env DATA_DIR='/workspace' --privileged --volume /home/myusername/plnsvc:/workspace quay.io/myuser/pipelines-kcp
+~~~
+
+Make sure that iptables/firewalld are not preventing the communication (tcp initiated from the kind clusters) between the containers running on the kind network and the kcp process on the host.
+
+To check iptables rules:
+~~~
+sudo iptables -L -n -v
+~~~
+
+The following command can be used to insert a new rule allowing the podman network `10.88.0.1/24` to access the port `6443` of the kcp API server running on a host with IP `192.168.0.121`:
+~~~
+sudo iptables -I INPUT -p tcp --src 10.88.0.1/24 --dport 6443 --dst 192.168.0.121 -j ACCEPT
+~~~
+
 ## Gateway
 
 A gateway can be installed to expose endpoints running on the workload clusters through kcp load balancer. Refer to the [gateway documentation](docs/gateway.md) for the instructions.
 
 ## GitOps
 
-Argo CD is by default installed on the first cluster. Alternatively it can be installed afterwards by running the following:
+Argo CD is by default installed on both clusters. Alternatively it can be installed afterwards by running the following:
 
 ```console
 KUBECONFIG=/path-to/config.kubeconfig ./local/argocd/setup.sh
@@ -67,7 +86,7 @@ KUBECONFIG=/path-to/config.kubeconfig ./local/argocd/setup.sh
 
 Argo CD client can be downloaded from the [Argo CD release page](https://github.com/argoproj/argo-cd/releases/latest).
 
-An ingress is created so that it is possible to login as follows:
+An ingress is created so that it is possible to login as follows for the first cluster. The port needs to be changed to access the instance on the second cluster:
 
 ```console
 argocd login argocd-server-argocd.apps.127.0.0.1.nip.io:8443
@@ -75,9 +94,9 @@ argocd login argocd-server-argocd.apps.127.0.0.1.nip.io:8443
 
 Argo CD web UI is accessible at https://argocd-server-argocd.apps.127.0.0.1.nip.io:8443/applications.
 
-GitOps is the preferred approach for deploying the Pipelines Service. The installed instance of ArgoCD can be leveraged for creating organisations in kcp, universal workspaces used by the infrastructure, installing the Tekton controllers and registering the workload clusters.
+GitOps is the preferred approach for deploying the Pipelines Service. The installed instances of ArgoCD can be leveraged for creating organisations in kcp, universal workspaces used by the infrastructure, installing the Tekton controllers and registering the workload clusters.
 
-This is currently being worked on. Automation and documentation will be added very soon.
+The cluster where Argo CD runs is automatically registered to Argo CD.
 
 ## Tearing down the environment
 
@@ -88,3 +107,18 @@ Files in /tmp are usually cleared by reboot and depending on the operating syste
 
 Workload clusters created with kind can be removed with the usual kind command for the purpose `kind delete clusters us-east1 us-west1`
 Files for the kind clusters are stored in a directory located in /tmp as well if `$TMPDIR` has not been set to another location.
+
+## Troubleshooting
+
+### Ingress router pods crashloop - "too many open files"
+
+Depending on your machine's configuration, the ingress router and ArgoCD pods may crashloop with a "too many open files" error.
+This is likely due to the Linux kernel limiting the number of file watches.
+
+On Fedora, this can be fixed by adding a `.conf` file to `/etc/sysctl.d/ increasing the number of file watches and instances:
+
+```sh
+# /etc/sysctl.d/98_fs_inotify_increase_watches.conf
+fs.inotify.max_user_watches=2097152
+fs.inotify.max_user_instances=256
+```

@@ -1,16 +1,16 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: pipelines-crds
   namespace: openshift-gitops
+  name: ckcp
 
 spec:
   destination:
-    name: kcp
-    namespace: default # not relevant yet since every object has an explicit namespace.
+    namespace: ckcp
+    server: https://kubernetes.default.svc
   source:
-    path: gitops/pipelines/pipelines-crds/overlays/patched
-    repoURL: https://github.com/AndrienkoAleksandr/pipelines-service.git
+    path: gitops/argocd/ckcp/base
+    repoURL: https://github.com/openshift-pipelines/pipelines-service.git
     targetRevision: main
   project: default
   syncPolicy:

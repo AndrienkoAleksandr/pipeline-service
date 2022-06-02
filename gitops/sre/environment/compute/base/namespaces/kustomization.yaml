@@ -1,0 +1,3 @@
+resources:
+- kcp-syncer-ns.yaml
+- tekton-ns.yaml

@@ -1,16 +1,16 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  name: pipelines-controller
   namespace: openshift-gitops
-  name: ckcp
 
 spec:
   destination:
-    namespace: ckcp
-    server: https://kubernetes.default.svc
+    name: plnsvc
+    namespace: default # not relevant yet since every object has an explicit namespace.
   source:
-    path: gitops/ckcp/base
-    repoURL: https://github.com/AndrienkoAleksandr/pipelines-service.git
+    path: gitops/argocd/pipelines/pipelines-controller/base
+    repoURL: https://github.com/openshift-pipelines/pipelines-service.git
     targetRevision: main
   project: default
   syncPolicy:

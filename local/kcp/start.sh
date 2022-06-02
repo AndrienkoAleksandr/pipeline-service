@@ -50,7 +50,7 @@ kcp-binaries () {
 
 kcp-start() {
   printf "Starting KCP server ...\n"
-  (cd "${TMP_DIR}" && exec "${KCP_DIR}"/bin/kcp start --discovery-poll-interval=3s --profiler-address localhost:6060 -v 2) &> "${TMP_DIR}/kcp.log" &
+  (cd "${TMP_DIR}" && exec "${KCP_DIR}"/bin/kcp start ${PARAMS}) &> "${TMP_DIR}/kcp.log" &
   KCP_PID=$!
   KCP_PIDS="${KCP_PIDS} ${KCP_PID}"
   printf "KCP server started: %s\n" $KCP_PID
@@ -87,6 +87,12 @@ envoy-start() {
   KCP_CIDS="${KCP_CIDS}  ${ENVOY_CID}"
 }
 
+create-org() {
+  printf "Creating organization\n"
+  kubectl --kubeconfig="${KUBECONFIG}" config use-context root
+  kubectl --kubeconfig="${KUBECONFIG}" create -f "${PARENT_PATH}"/pipelines-service-org.yaml
+}
+
 # Execution
 
 kcp-binaries
@@ -118,6 +124,7 @@ fi
 kcp-start
 ingress-ctrler-start
 envoy-start
+create-org
 
 touch "${TMP_DIR}/servers-ready"
 

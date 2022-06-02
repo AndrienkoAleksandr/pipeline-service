@@ -8,7 +8,9 @@ SCRIPT_DIR="$(
   cd "$(dirname "$0")" >/dev/null
   pwd
 )"
-GITOPS_DIR="$(dirname "$SCRIPT_DIR")/gitops"
+
+GITOPS_DIR="$(dirname "$SCRIPT_DIR")/gitops/argocd/argocd-apps"
+CKCP_DIR="$(dirname "$SCRIPT_DIR")/ckcp"
 WORK_DIR="$SCRIPT_DIR/work"
 KUBECONFIG=${KUBECONFIG:-$HOME/.kube/config}
 KUBECONFIG_KCP="$WORK_DIR/kubeconfig/admin.kubeconfig"
@@ -44,6 +46,7 @@ parse_args() {
   local trigger_list="triggers_crds triggers_interceptors triggers_controller"
   local pac_list="pipelines_as_code_crds pipelines_as_code_controller"
   APP_LIST="$default_list"
+  cluster_type="openshift"
 
   while [[ $# -gt 0 ]]; do
     case $1 in
@@ -91,7 +94,7 @@ parse_args() {
 }
 
 check_cluster_role() {
-  if [ "$(oc auth can-i '*' '*' --all-namespaces)" != "yes" ]; then
+  if [ "$(kubectl auth can-i '*' '*' --all-namespaces)" != "yes" ]; then
     echo
     echo "[ERROR] User '$(oc whoami)' does not have the required 'cluster-admin' role." 1>&2
     echo "Log into the cluster with a user with the required privileges (e.g. kubeadmin) and retry."
@@ -103,7 +106,7 @@ install_app() {
   APP="$1"
 
   echo -n "  - $APP application: "
-  oc apply -f "$GITOPS_DIR/$APP.yaml" --wait >/dev/null
+  kubectl apply -f "$GITOPS_DIR/$APP.yaml" --wait >/dev/null
   argocd app wait "$APP" >/dev/null
   echo "OK"
 }
@@ -117,14 +120,14 @@ install_openshift_gitops() {
   # Install the gitops operator
   #############################################################################
   echo -n "  - OpenShift-GitOps: "
-  oc apply -f "$GITOPS_DIR/$APP.yaml" --wait >/dev/null
+  kubectl apply -k "$CKCP_DIR/openshift-operators/$APP" >/dev/null 2>&1
   echo "OK"
 
   #############################################################################
   # Wait for the URL to be available
   #############################################################################
   echo -n "  - ArgoCD dashboard: "
-  test_cmd="oc get route/openshift-gitops-server --ignore-not-found -n $APP -o jsonpath={.spec.host}"
+  test_cmd="kubectl get route/openshift-gitops-server --ignore-not-found -n $APP -o jsonpath={.spec.host}"
   ARGOCD_HOSTNAME="$(${test_cmd})"
   until curl --fail --insecure --output /dev/null --silent "https://$ARGOCD_HOSTNAME"; do
     echo -n "."
@@ -137,15 +140,11 @@ install_openshift_gitops() {
   #############################################################################
   # Post install
   #############################################################################
-
-  # Allow ArgoCD to control resources outside of its namespace
-  oc adm policy add-cluster-role-to-user cluster-admin -z openshift-gitops-argocd-application-controller -n openshift-gitops >/dev/null
-
   # Log into ArgoCD
   echo -n "  - ArgoCD Login: "
   local argocd_password
-  argocd_password="$(oc get secret openshift-gitops-cluster -n openshift-gitops -o jsonpath="{.data.admin\.password}" | base64 --decode)"
-  argocd login "$ARGOCD_HOSTNAME" --grpc-web --insecure --username admin --password "$argocd_password" >/dev/null
+  argocd_password="$(kubectl get secret openshift-gitops-cluster -n openshift-gitops -o jsonpath="{.data.admin\.password}" | base64 --decode)"
+  argocd login "$ARGOCD_HOSTNAME" --grpc-web --insecure --username admin --password "$argocd_password" >/dev/null 2>&1
   echo "OK"
 
   # Register the host cluster as pipeline-cluster
@@ -157,107 +156,120 @@ install_openshift_gitops() {
   echo "OK"
 }
 
+install_cert_manager() {
+  local APP="cert-manager"
+  # #############################################################################
+  # # Install the cert manager operator
+  # #############################################################################
+  echo -n "  - openshift-cert-manager-operator: "
+  kubectl apply -f "$CKCP_DIR/argocd-apps/$APP.yaml" >/dev/null 2>&1
+  argocd app wait "$APP" >/dev/null 2>&1
+  # Check cert manager pods until they are ready
+  while [ "$(kubectl -n openshift-cert-manager get pods --field-selector=status.phase=Running | grep -c cert-manager)" != 3 ]
+  do
+    echo -n "."
+    sleep 5
+  done
+  echo "OK"
+}
+
 install_ckcp() {
   APP="ckcp"
 
   local ns="$APP"
   local kube_dir="$WORK_DIR/kubeconfig"
 
-  #############################################################################
-  # Deploy KCP
-  #############################################################################
-  install_app "$APP"
+  # Install cert manager operator
+  install_cert_manager
+
+  # #############################################################################
+  # # Deploy KCP
+  # #############################################################################
+  local ckcp_manifest_dir=$CKCP_DIR/$cluster_type
+  local ckcp_dev_dir=$ckcp_manifest_dir/overlays/dev
+  local ckcp_temp_dir=$ckcp_manifest_dir/overlays/temp
+
+  # To ensure kustomization.yaml file under overlays/temp won't be changed, remove the dirctory overlays/temp if it exists
+  if [ -d "$ckcp_temp_dir" ]; then
+    rm -rf $ckcp_temp_dir
+  fi
+  cp -rf $ckcp_dev_dir $ckcp_temp_dir
+
+  local ckcp_route
+  domain_name="$(kubectl get ingresses.config/cluster -o jsonpath='{.spec.domain}')"
+  ckcp_route="$(echo ckcp-ckcp.$domain_name)"
+  echo "
+patches:
+  - target:
+      kind: Ingress
+      name: ckcp
+    patch: |-
+      - op: add
+        path: /spec/rules/0/host
+        description: An ingress host needs to be defined which has the routing suffix of your cluster.
+        value: $ckcp_route
+  - target:
+      kind: Deployment
+      name: ckcp
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/0/value
+        description: This value refers to the hostAddress defined in the Route.
+        value: $ckcp_route
+  - target:
+      kind: Certificate
+      name: kcp
+    patch: |-
+      - op: add
+        path: /spec/dnsNames/-
+        description: This value refers to the hostAddress defined in the Route.
+        value: $ckcp_route " >> $ckcp_temp_dir/kustomization.yaml
+
+  kubectl apply -k $ckcp_temp_dir >/dev/null 2>&1
+  # Check if ckcp pod status is Ready
+  while [[ $(kubectl -n $ns  get pods -l=app=kcp-in-a-pod -o 'jsonpath={.items[0].status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do 
+    echo -n "."
+    sleep 5
+  done  
+
+  rm -rf $ckcp_temp_dir
 
   #############################################################################
   # Post install
   #############################################################################
   # Copy the kubeconfig of kcp from inside the pod onto the local filesystem
-  podname="$(oc get pods --ignore-not-found -n "$ns" -l=app=kcp-in-a-pod -o jsonpath='{.items[0].metadata.name}')"
-  oc cp "$APP/$podname:/etc/kcp/config/admin.kubeconfig" "$KUBECONFIG_KCP" >/dev/null
+  podname="$(kubectl get pods --ignore-not-found -n "$ns" -l=app=kcp-in-a-pod -o jsonpath='{.items[0].metadata.name}')"
+  kubectl cp "$APP/$podname:etc/kcp/config/admin.kubeconfig" "$KUBECONFIG_KCP" >/dev/null
 
   # Check if external ip is assigned and replace kcp's external IP in the kubeconfig file
   echo -n "  - Route: "
-  CERT_AUTHORITY=$(yq e '.clusters[0].cluster.certificate-authority-data' "$KUBECONFIG_KCP")
-  yq e -i '.| del(.clusters[].cluster.certificate-authority-data) | (.clusters[].cluster.insecure-skip-tls-verify += true )  | .' "$KUBECONFIG_KCP"
-  echo "OK"
-
-  # Make sure access to kcp-in-a-pod is good
-  echo -n "  - KCP api-server: "
-  KUBECONFIG="$KUBECONFIG_KCP" oc config set-cluster admin --insecure-skip-tls-verify=true >/dev/null
-  until KUBECONFIG="$KUBECONFIG_KCP" oc api-resources >/dev/null 2>&1; do
-    echo -n "."
-    sleep 2
-  done
-  echo "OK"
-
-  KUBECONFIG="$KUBECONFIG_KCP" kubectl kcp workspace use root
-
-  echo -n " - Organization"
-  if ! KUBECONFIG="$KUBECONFIG_KCP" oc get workspaces test-org >/dev/null 2>&1; then
-    KUBECONFIG="$KUBECONFIG_KCP" kubectl kcp workspace create --type Organization test-org --enter
-  else
-    KUBECONFIG="$KUBECONFIG_KCP" kubectl kcp workspace use test-org
-  fi
-  echo "OK"
-
-  echo -n "  - Workspace: "
-  if ! KUBECONFIG="$KUBECONFIG_KCP" oc get workspaces demo >/dev/null 2>&1; then
-    KUBECONFIG="$KUBECONFIG_KCP" kubectl kcp workspace create demo --enter
-  else
-    KUBECONFIG="$KUBECONFIG_KCP" kubectl kcp workspace use demo
+  if grep -q "ckcp-ckcp.apps.domain.org" "$KUBECONFIG_KCP"; then
+    yq e -i "(.clusters[].cluster.server) |= sub(\"ckcp-ckcp.apps.domain.org:6443\", \"$ckcp_route:443\")" "$KUBECONFIG_KCP"
   fi
   echo "OK"
 
   # Register the host cluster to KCP
+  echo -n "  - Workspace: "
+  # It's not allowed to create WorkloadCluster resource in a non-universal workspace
+  if ! KUBECONFIG="$KUBECONFIG_KCP" kubectl get workspaces demo >/dev/null 2>&1; then
+    KUBECONFIG="$KUBECONFIG_KCP" kubectl kcp workspaces create demo --enter &>/dev/null
+  fi
+  echo "OK"
+
   echo -n "  - Workloadcluster pipeline-cluster registration: "
-  if ! KUBECONFIG="$KUBECONFIG_KCP" oc get workloadcluster local >/dev/null 2>&1; then
-    KUBECONFIG="$KUBECONFIG_KCP" /Users/oandriie/projects/kcp/bin/kubectl-kcp workload sync "local" --resources ingresses.networking.k8s.io,deployments.apps,services --syncer-image ghcr.io/kcp-dev/kcp/syncer:cc241c0 > "$kube_dir/cluster.yaml"
-
-    # Set up certificate authority, workload sync doesn't include this data...
-    sed -i "s|certificate-authority-data: |certificate-authority-data: ${CERT_AUTHORITY}|" "$kube_dir/cluster.yaml"
-    oc apply -f "$kube_dir/cluster.yaml" >/dev/null
-
-    rm "$kube_dir/cluster.yaml"
+  if ! KUBECONFIG="$KUBECONFIG_KCP" kubectl get WorkloadCluster local >/dev/null 2>&1; then
+    (
+      KUBECONFIG="$KUBECONFIG_KCP" kubectl kcp workload sync local  --syncer-image ghcr.io/kcp-dev/kcp/syncer:release-0.4  > "$kube_dir/syncer.yaml"
+      kubectl apply -f "$kube_dir/syncer.yaml" >/dev/null 2>&1
+      rm -rf "$kube_dir/syncer.yaml"
+    )
   fi
   echo "OK"
 
   # Register the KCP cluster into ArgoCD
   echo -n "  - KCP cluster registration to ArgoCD: "
   if ! KUBECONFIG="$KUBECONFIG_MERGED" argocd cluster get kcp >/dev/null 2>&1; then
-    KUBECONFIG="$KUBECONFIG_KCP" oc create namespace kube-system >/dev/null 2>&1 || true
-    # <workaround> See https://github.com/kcp-dev/kcp/issues/535
-    # Manually create the serviceaccount and secret on the KCP cluster for ArgoCD to use
-    local argocd_yaml="$kube_dir/argocd_kcp.yaml"
-    local argocd_sa="argocd-manager"
-    local argocd_ns="kube-system"
-    echo "---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: $argocd_sa
-  namespace: $argocd_ns
-  annotations:
-    kubernetes.io/service-account.name: $argocd_sa
-type: kubernetes.io/service-account-token
-data:
-  ca.crt: ${CERT_AUTHORITY}
-  namespace: $(echo "$argocd_ns" | base64)
-  token: $(yq e ".users.[0].user.token" "$KUBECONFIG_KCP" | tr -d '\n' | base64)
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  clusterName: admin
-  name: $argocd_sa
-  namespace: $argocd_ns
-secrets:
-- name: $argocd_sa" >"$argocd_yaml"
-    KUBECONFIG="$KUBECONFIG_KCP" oc apply -f "$argocd_yaml" >/dev/null
-    rm "$argocd_yaml"
-    # </workaround>
-
-    sed -i'' -e 's:admin$:admin_kcp:g' "$KUBECONFIG_KCP"
-    KUBECONFIG="$KUBECONFIG_MERGED" argocd cluster add workspace.kcp.dev/current --name=kcp --yes >/dev/null 2>&1
+    KUBECONFIG="$KUBECONFIG_MERGED" argocd cluster add "workspace.kcp.dev/current" --name=kcp  --system-namespace default --yes >/dev/null 2>&1
   fi
   echo "OK"
 }
@@ -269,8 +281,8 @@ install_pipelines_crds() {
 install_pipelines_controller() {
   # Create kcp-kubeconfig secret for pipelines controller
   echo -n "  - Register KCP secret to host cluster: "
-  oc create namespace pipelines --dry-run=client -o yaml | oc apply -f - --wait &>/dev/null
-  oc create secret generic kcp-kubeconfig -n pipelines --from-file "$KUBECONFIG_KCP" --dry-run=client -o yaml | oc apply -f - --wait &>/dev/null
+  kubectl create namespace pipelines --dry-run=client -o yaml | kubectl apply -f - --wait &>/dev/null
+  kubectl create secret generic kcp-kubeconfig -n pipelines --from-file "$KUBECONFIG_KCP" --dry-run=client -o yaml | kubectl apply -f - --wait &>/dev/null 2>&1
   echo "OK"
 
   install_app pipelines-controller
@@ -284,17 +296,16 @@ install_triggers_interceptors() {
   oc create namespace tekton-pipelines -o yaml --dry-run=client | oc apply -f - --wait &>/dev/null
 
   # Create kcp-kubeconfig secrets for event listener and interceptors so that they can talk to KCP
-  oc create secret generic kcp-kubeconfig --from-file "$KUBECONFIG_KCP" --dry-run=client -o yaml | KUBECONFIG="$KUBECONFIG_KCP" oc apply -f - --wait &>/dev/null
-  oc create secret generic kcp-kubeconfig -n tekton-pipelines --from-file "$KUBECONFIG_KCP" --dry-run=client -o yaml | KUBECONFIG="$KUBECONFIG_KCP" oc apply -f - --wait &>/dev/null
+  kubectl create secret generic kcp-kubeconfig --from-file "$KUBECONFIG_KCP" --dry-run=client -o yaml | KUBECONFIG="$KUBECONFIG_KCP" kubectl apply -f - --wait &>/dev/null
+  kubectl create secret generic kcp-kubeconfig -n tekton-pipelines --from-file "$KUBECONFIG_KCP" --dry-run=client -o yaml | KUBECONFIG="$KUBECONFIG_KCP" kubectl apply -f - --wait &>/dev/null
 
   install_app triggers-interceptors
 }
 
 install_triggers_controller() {
   # Create kcp-kubeconfig secret for triggers controller
-  oc create namespace triggers -o yaml --dry-run=client | oc apply -f - --wait &>/dev/null
-  
-  oc create secret generic kcp-kubeconfig -n triggers --from-file "$KUBECONFIG_KCP" --dry-run=client -o yaml | oc apply -f - --wait &>/dev/null
+  kubectl create namespace triggers -o yaml --dry-run=client | kubectl apply -f - --wait &>/dev/null
+  kubectl create secret generic kcp-kubeconfig -n triggers --from-file "$KUBECONFIG_KCP" --dry-run=client -o yaml | kubectl apply -f - --wait &>/dev/null
 
   install_app triggers-controller
 }
