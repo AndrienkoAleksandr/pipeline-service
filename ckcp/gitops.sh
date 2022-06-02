@@ -177,8 +177,8 @@ install_ckcp() {
 
   # Check if external ip is assigned and replace kcp's external IP in the kubeconfig file
   echo -n "  - Route: "
-    CERT_AUTHORITY=$(yq e '.clusters[0].cluster.certificate-authority-data' "$KUBECONFIG_KCP")
-    yq e -i '.| del(.clusters[].cluster.certificate-authority-data) | (.clusters[].cluster.insecure-skip-tls-verify += true )  | .' "$KUBECONFIG_KCP"
+  CERT_AUTHORITY=$(yq e '.clusters[0].cluster.certificate-authority-data' "$KUBECONFIG_KCP")
+  yq e -i '.| del(.clusters[].cluster.certificate-authority-data) | (.clusters[].cluster.insecure-skip-tls-verify += true )  | .' "$KUBECONFIG_KCP"
   echo "OK"
 
   # Make sure access to kcp-in-a-pod is good
@@ -252,12 +252,12 @@ metadata:
   namespace: $argocd_ns
 secrets:
 - name: $argocd_sa" >"$argocd_yaml"
-    KUBECONFIG="$KUBECONFIG_KCP" oc apply -f "$argocd_yaml" >/dev/null
+    KUBECONFIG="$KUBECONFIG_KCP" oc apply -f "$argocd_yaml" --wait >/dev/null
     rm "$argocd_yaml"
     # </workaround>
 
     sed -i'' -e 's:admin$:admin_kcp:g' "$KUBECONFIG_KCP"
-    KUBECONFIG="$KUBECONFIG_MERGED" argocd cluster add workspace.kcp.dev/current --name=kcp --yes >/dev/null 2>&1 || true
+    KUBECONFIG="$KUBECONFIG_MERGED" argocd cluster add workspace.kcp.dev/current --name=kcp --yes >/dev/null 2>&1
   fi
   echo "OK"
 }

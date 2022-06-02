@@ -40,8 +40,8 @@ kcp-binaries () {
     git clone https://github.com/kcp-dev/kcp.git
     KCP_DIR="${KCP_PARENT_DIR}/kcp"
     pushd kcp
-    KCP_BRANCH="${KCP_BRANCH:-release-0.4}"
-    git checkout "${KCP_BRANCH}"
+    # KCP_BRANCH="${KCP_BRANCH:-release-0.4}"
+    # git checkout "${KCP_BRANCH}"
     make build
     popd
     popd
@@ -50,7 +50,7 @@ kcp-binaries () {
 
 kcp-start() {
   printf "Starting KCP server ...\n"
-  (cd "${TMP_DIR}" && exec "${KCP_DIR}"/bin/kcp start "$PARAMS") &> "${TMP_DIR}/kcp.log" &
+  (cd "${TMP_DIR}" && exec "${KCP_DIR}"/bin/kcp start --discovery-poll-interval=3s --profiler-address localhost:6060 -v 2) &> "${TMP_DIR}/kcp.log" &
   KCP_PID=$!
   KCP_PIDS="${KCP_PIDS} ${KCP_PID}"
   printf "KCP server started: %s\n" $KCP_PID
@@ -110,7 +110,6 @@ KCP_CIDS=""
 PARAMS="${PARAMS:-}"
 if [[ -z "${PARAMS}" ]]; then
 PARAMS="--token-auth-file ${PARENT_PATH}/kcp-tokens \
---auto-publish-apis \
 --discovery-poll-interval 3s \
 --profiler-address localhost:6060 \
 -v 2"

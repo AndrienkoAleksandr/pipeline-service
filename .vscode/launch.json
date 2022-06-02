@@ -15,7 +15,11 @@
             "type": "bashdb",
             "request": "launch",
             "name": "Bash-Debug 2",
-            "program": "${file}"
+            "program": "${file}",
+            "env": {
+                "CONTAINER_ENGINE": "docker",
+                "NO_ARGOCD": "true"
+            }
         }
     ]
 }
