@@ -40,8 +40,8 @@ kcp-binaries () {
     git clone https://github.com/kcp-dev/kcp.git
     KCP_DIR="${KCP_PARENT_DIR}/kcp"
     pushd kcp
-    # KCP_BRANCH="${KCP_BRANCH:-release-0.4}"
-    # git checkout "${KCP_BRANCH}"
+    KCP_BRANCH="${KCP_BRANCH:-release-0.4}"
+    git checkout "${KCP_BRANCH}"
     make build
     popd
     popd

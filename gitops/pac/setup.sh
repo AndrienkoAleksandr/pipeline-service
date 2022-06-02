@@ -74,8 +74,8 @@ mk_tmpdir () {
 
 kustomize () {
 
-    GIT_TOKEN=$(echo "${GIT_TOKEN}" | base64)
-    WEBHOOK_SECRET=$(echo "${WEBHOOK_SECRET}" | base64)
+    GIT_TOKEN=$(echo -n "${GIT_TOKEN}" | base64)
+    WEBHOOK_SECRET=$(echo -n "${WEBHOOK_SECRET}" | base64)
 
     # Create a json patch for the repository
     cat <<EOF > ${TMP_DIR}/patch-repo.yaml
@@ -106,7 +106,7 @@ EOF
         cat <<EOF > ${TMP_DIR}/kustomization.yaml
 resources:
 - ingress.yaml
-- ../../$parent_path/manifests
+- ./manifests
 patchesJson6902:
 - target:
     group: pipelinesascode.tekton.dev
@@ -131,7 +131,7 @@ EOF
 	# kustomization.yaml
         cat <<EOF > ${TMP_DIR}/kustomization.yaml
 resources:
-- ../../$parent_path/manifests
+- ./manifests
 patchesJson6902:
 - target:
     group: pipelinesascode.tekton.dev
@@ -147,8 +147,12 @@ patchesJson6902:
 EOF
 
     fi
-    kubectl kustomize ${TMP_DIR} > ${TMP_DIR}/patched.yaml
+    pushd "${TMP_DIR}"
+    cp -rf "${parent_path}/manifests" "${TMP_DIR}"
+    ls "${TMP_DIR}/"
+    kubectl kustomize . > ${TMP_DIR}/patched.yaml
     kubectl --kubeconfig=${KUBECONFIG} apply -f ${TMP_DIR}/patched.yaml
+    popd || exit 1
 }
 
 parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
