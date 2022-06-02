@@ -252,7 +252,7 @@ metadata:
   namespace: $argocd_ns
 secrets:
 - name: $argocd_sa" >"$argocd_yaml"
-    KUBECONFIG="$KUBECONFIG_KCP" oc apply -f "$argocd_yaml" --wait >/dev/null
+    KUBECONFIG="$KUBECONFIG_KCP" oc apply -f "$argocd_yaml" >/dev/null
     rm "$argocd_yaml"
     # </workaround>
 
