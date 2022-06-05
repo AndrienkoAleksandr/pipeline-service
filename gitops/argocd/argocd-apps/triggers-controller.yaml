@@ -10,8 +10,8 @@ spec:
     namespace: default # not relevant yet since every object has an explicit namespace.
   source:
     path: gitops/argocd/triggers/triggers-controller/base
-    repoURL: https://github.com/openshift-pipelines/pipelines-service.git
-    targetRevision: main
+    repoURL: https://github.com/AndrienkoAleksandr/pipelines-service.git
+    targetRevision: main-origin
   project: default
   syncPolicy:
 
