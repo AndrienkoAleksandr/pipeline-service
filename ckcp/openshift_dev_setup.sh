@@ -162,8 +162,11 @@ install_cert_manager() {
   # # Install the cert manager operator
   # #############################################################################
   echo -n "  - openshift-cert-manager-operator: "
-  kubectl apply -f "$CKCP_DIR/argocd-apps/$APP.yaml" >/dev/null 2>&1
-  argocd app wait "$APP" >/dev/null 2>&1
+
+  if ! oc get applications.argoproj.io cert-manager -n openshift-gitops >/dev/null 2>&1; then
+    kubectl apply -f "$CKCP_DIR/argocd-apps/$APP.yaml" >/dev/null 2>&1
+    argocd app wait "$APP" >/dev/null 2>&1
+  fi
   # Check cert manager pods until they are ready
   while [ "$(kubectl -n openshift-cert-manager get pods --field-selector=status.phase=Running | grep -c cert-manager)" != 3 ]
   do
@@ -189,7 +192,7 @@ install_ckcp() {
   local ckcp_dev_dir=$ckcp_manifest_dir/overlays/dev
   local ckcp_temp_dir=$ckcp_manifest_dir/overlays/temp
 
-  # To ensure kustomization.yaml file under overlays/temp won't be changed, remove the dirctory overlays/temp if it exists
+  # To ensure kustomization.yaml file under overlays/temp won't be changed, remove the directory overlays/temp if it exists
   if [ -d "$ckcp_temp_dir" ]; then
     rm -rf $ckcp_temp_dir
   fi
@@ -253,23 +256,23 @@ patches:
   # It's not allowed to create WorkloadCluster resource in a non-universal workspace
   if ! KUBECONFIG="$KUBECONFIG_KCP" kubectl get workspaces demo >/dev/null 2>&1; then
     KUBECONFIG="$KUBECONFIG_KCP" kubectl kcp workspaces create demo --enter &>/dev/null
+  else
+    KUBECONFIG="$KUBECONFIG_KCP" kubectl kcp workspace use demo
   fi
   echo "OK"
 
   echo -n "  - Workloadcluster pipeline-cluster registration: "
-  if ! KUBECONFIG="$KUBECONFIG_KCP" kubectl get WorkloadCluster local >/dev/null 2>&1; then
-    (
-      KUBECONFIG="$KUBECONFIG_KCP" kubectl kcp workload sync local  --syncer-image ghcr.io/kcp-dev/kcp/syncer:release-0.4  > "$kube_dir/syncer.yaml"
-      kubectl apply -f "$kube_dir/syncer.yaml" >/dev/null 2>&1
-      rm -rf "$kube_dir/syncer.yaml"
-    )
+  if ! KUBECONFIG="$KUBECONFIG_KCP" kubectl get workloadcluster local >/dev/null 2>&1; then
+    KUBECONFIG="$KUBECONFIG_KCP" kubectl kcp workload sync local  --syncer-image ghcr.io/kcp-dev/kcp/syncer:release-0.4  > "$kube_dir/syncer.yaml"
+    kubectl apply -f "$kube_dir/syncer.yaml"
+    rm -rf "$kube_dir/syncer.yaml"
   fi
   echo "OK"
 
   # Register the KCP cluster into ArgoCD
   echo -n "  - KCP cluster registration to ArgoCD: "
   if ! KUBECONFIG="$KUBECONFIG_MERGED" argocd cluster get kcp >/dev/null 2>&1; then
-    KUBECONFIG="$KUBECONFIG_MERGED" argocd cluster add "workspace.kcp.dev/current" --name=kcp  --system-namespace default --yes >/dev/null 2>&1
+    KUBECONFIG="$KUBECONFIG_MERGED" argocd cluster add "workspace.kcp.dev/current" --name=kcp --system-namespace default --yes >/dev/null 2>&1
   fi
   echo "OK"
 }
@@ -293,8 +296,6 @@ install_triggers_crds() {
 }
 
 install_triggers_interceptors() {
-  oc create namespace tekton-pipelines -o yaml --dry-run=client | oc apply -f - --wait &>/dev/null
-
   # Create kcp-kubeconfig secrets for event listener and interceptors so that they can talk to KCP
   kubectl create secret generic kcp-kubeconfig --from-file "$KUBECONFIG_KCP" --dry-run=client -o yaml | KUBECONFIG="$KUBECONFIG_KCP" kubectl apply -f - --wait &>/dev/null
   kubectl create secret generic kcp-kubeconfig -n tekton-pipelines --from-file "$KUBECONFIG_KCP" --dry-run=client -o yaml | KUBECONFIG="$KUBECONFIG_KCP" kubectl apply -f - --wait &>/dev/null
