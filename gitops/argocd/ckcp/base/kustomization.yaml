@@ -43,4 +43,4 @@ namespace: ckcp
 images:
 - name: kcp
   newName: ghcr.io/kcp-dev/kcp
-  newTag: cc241c0
+  newTag: v0.5.0-alpha.0
