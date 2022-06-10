@@ -36,7 +36,7 @@ spec:
         - --v=2
         env:
         - name: EXTERNAL_HOSTNAME
-          value: ckcp-ckcp.apps.ci-ln-8i2wb4k-72292.origin-ci-int-gce.dev.rhcloud.com
+          value: ckcp-ckcp.apps.ci-ln-sw9j7bt-72292.origin-ci-int-gce.dev.rhcloud.com
         livenessProbe:
           failureThreshold: 3
           httpGet:
