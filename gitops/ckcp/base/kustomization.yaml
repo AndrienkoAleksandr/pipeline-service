@@ -19,7 +19,7 @@ patches:
       - op: replace
         path: /spec/host
         description: Make sure you can use the route with your cluster or change accordingly if not.
-        value: ckcp-ckcp.apps.ci-ln-sw9j7bt-72292.origin-ci-int-gce.dev.rhcloud.com
+        value: ckcp-ckcp.apps.ci-ln-4j1ncwb-72292.origin-ci-int-gce.dev.rhcloud.com
   # - target:
   #     kind: Deployment
   #     name: ckcp
@@ -36,11 +36,11 @@ patches:
       - op: add
         path: /spec/dnsNames/-
         description: This value refers to the hostAddress defined above.
-        value: "*.apps.ci-ln-sw9j7bt-72292.origin-ci-int-gce.dev.rhcloud.com"
+        value: "*.apps.ci-ln-4j1ncwb-72292.origin-ci-int-gce.dev.rhcloud.com"
 
 namespace: ckcp
 
 images:
 - name: kcp
   newName: ghcr.io/kcp-dev/kcp
-  newTag: cc241c0
+  newTag: ea614c0
