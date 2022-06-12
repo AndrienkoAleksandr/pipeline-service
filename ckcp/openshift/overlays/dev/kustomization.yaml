@@ -6,6 +6,6 @@ resources:
 images:
 - name: kcp
   newName: ghcr.io/kcp-dev/kcp
-  newTag: v0.5.0-alpha.1
+  newTag: ea614c0
 
 namespace: ckcp

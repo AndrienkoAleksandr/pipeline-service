@@ -263,7 +263,7 @@ patches:
 
   echo -n "  - Workloadcluster pipeline-cluster registration: "
   if ! KUBECONFIG="$KUBECONFIG_KCP" kubectl get workloadcluster local >/dev/null 2>&1; then
-    KUBECONFIG="$KUBECONFIG_KCP" kubectl kcp workload sync local  --syncer-image ghcr.io/kcp-dev/kcp/syncer:release-0.4  > "$kube_dir/syncer.yaml"
+    KUBECONFIG="$KUBECONFIG_KCP" kubectl kcp workload sync local --resources ingresses.networking.k8s.io,deployments.apps,services,pods,persistentvolumeclaims,statefulsets.apps --syncer-image ghcr.io/kcp-dev/kcp/syncer:ea614c0  > "$kube_dir/syncer.yaml"
     kubectl apply -f "$kube_dir/syncer.yaml"
     rm -rf "$kube_dir/syncer.yaml"
   fi
