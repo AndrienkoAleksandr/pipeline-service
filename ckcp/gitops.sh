@@ -211,7 +211,7 @@ install_ckcp() {
   # Register the host cluster to KCP
   echo -n "  - Workloadcluster pipeline-cluster registration: "
   if ! KUBECONFIG="$KUBECONFIG_KCP" oc get workloadcluster local >/dev/null 2>&1; then
-    KUBECONFIG="$KUBECONFIG_KCP" /Users/oandriie/projects/kcp/bin/kubectl-kcp workload sync "local" --resources ingresses.networking.k8s.io,deployments.apps,services --syncer-image ghcr.io/kcp-dev/kcp/syncer:cc241c0 > "$kube_dir/cluster.yaml"
+    KUBECONFIG="$KUBECONFIG_KCP" /Users/oandriie/projects/kcp/bin/kubectl-kcp workload sync "local" --resources ingresses.networking.k8s.io,deployments.apps,services,pods,persistentvolumeclaims,statefulsets.apps --syncer-image ghcr.io/kcp-dev/kcp/syncer:ea614c0 > "$kube_dir/cluster.yaml"
 
     # Set up certificate authority, workload sync doesn't include this data...
     sed -i "s|certificate-authority-data: |certificate-authority-data: ${CERT_AUTHORITY}|" "$kube_dir/cluster.yaml"
