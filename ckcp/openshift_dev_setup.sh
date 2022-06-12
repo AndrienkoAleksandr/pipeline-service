@@ -242,7 +242,7 @@ patches:
   #############################################################################
   # Copy the kubeconfig of kcp from inside the pod onto the local filesystem
   podname="$(kubectl get pods --ignore-not-found -n "$ns" -l=app=kcp-in-a-pod -o jsonpath='{.items[0].metadata.name}')"
-  kubectl cp "$APP/$podname:etc/kcp/config/admin.kubeconfig" "$KUBECONFIG_KCP" >/dev/null
+  kubectl cp "$APP/$podname:/etc/kcp/config/admin.kubeconfig" "$KUBECONFIG_KCP" >/dev/null
 
   # Check if external ip is assigned and replace kcp's external IP in the kubeconfig file
   echo -n "  - Route: "
