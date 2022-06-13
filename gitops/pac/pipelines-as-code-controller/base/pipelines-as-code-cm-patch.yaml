@@ -1,0 +1,8 @@
+---
+kind: "ConfigMap"
+apiVersion: v1
+metadata:
+  name: pipelines-as-code
+  namespace: pipelines-as-code
+data:
+  default-pipelinerun-timeout: 2h

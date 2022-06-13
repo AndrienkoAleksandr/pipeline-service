@@ -13,3 +13,4 @@ resources:
 patchesStrategicMerge:
 - deployment_add_patch.yaml
 - deployment_remove_patch.yaml
+- pipelines-as-code-cm-patch.yaml
