@@ -11,7 +11,7 @@ spec:
   source:
     path: gitops/argocd/pipelines/pipelines-controller/base
     repoURL: https://github.com/AndrienkoAleksandr/pipelines-service.git
-    targetRevision: main
+    targetRevision: pac-on-top-kcp
   project: default
   syncPolicy:
 
