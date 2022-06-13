@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: pipelines-as-code
+
+resources:
+- https://raw.githubusercontent.com/openshift-pipelines/pipelines-as-code/0.7.1/config/400-controller.yaml
+- https://raw.githubusercontent.com/openshift-pipelines/pipelines-as-code/0.7.1/config/401-controller-service.yaml
+- https://raw.githubusercontent.com/openshift-pipelines/pipelines-as-code/0.7.1/config/openshift/10-routes.yaml
+
+patchesStrategicMerge:
+- deployment_add_patch.yaml
+- deployment_remove_patch.yaml

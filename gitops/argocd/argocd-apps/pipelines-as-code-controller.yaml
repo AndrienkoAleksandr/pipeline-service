@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: pipelines-controller
+  name: pipelines-as-code-controller
   namespace: openshift-gitops
 
 spec:
@@ -9,7 +9,7 @@ spec:
     name: plnsvc
     namespace: default # not relevant yet since every object has an explicit namespace.
   source:
-    path: gitops/argocd/pipelines/pipelines-controller/base
+    path: gitops/pac/pipelines-as-code-controller/base
     repoURL: https://github.com/AndrienkoAleksandr/pipelines-service.git
     targetRevision: main
   project: default
