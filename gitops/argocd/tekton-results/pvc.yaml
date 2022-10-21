@@ -2,7 +2,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: tekton-logs
-  namespace: tekton-pipelines
+  namespace: tekton-results
 spec:
   accessModes:
   - ReadWriteOnce
