@@ -9,12 +9,13 @@ The registration is meant to be triggered from [Pipelines as Code](https://pipel
 Alternatively the registration can be performed by manually calling the registration script in the image directory:
 
 ```bash
-KCP_ORG="root:pipeline-service" KCP_WORKSPACE="compute" KCP_SYNC_TAG="v0.9.0" WORKSPACE_DIR="/workspace" ./register.sh
+KCP_ORG="root:pipeline-service" KCP_WORKSPACE="compute" KCP_SYNC_TAG="v0.9.0" 
+WORKSPACE_DIR="/workspace" ./images/kcp-registrar/register.sh
 ```
 
 | Name | Description |
 |------|-------------|
-| KCP_ORG | contains the organistation for which the workload clusters need to be registered, i.e.: root:pipeline-service|
+| KCP_ORG | contains the organization for which the workload clusters need to be registered, i.e.: root:pipeline-service|
 | KCP_WORKSPACE | contains the name of the workspace where the workload clusters get registered (created if it does not exist), i.e: compute|
 | KCP_SYNC_TAG | the tag of the kcp syncer image to use (preset in the container image at build time and leveraged by the PipelineRun)|
 | WORKSPACE_DIR | specifies the location of the cluster files<br> - a single file with extension kubeconfig is expected in the subdirectory: `credentials/kubeconfig/kcp`<br> - kubeconfig files for compute clusters are expected in the subdirectory: `credentials/kubeconfig/compute`|

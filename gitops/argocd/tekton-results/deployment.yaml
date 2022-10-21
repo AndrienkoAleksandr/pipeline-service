@@ -36,23 +36,45 @@ spec:
                 secretKeyRef:
                   key: DATABASE_PASSWORD
                   name: tekton-results-database
-            - name: DB_PROTOCOL
-              value: tcp
-            - name: DB_ADDR
+            - name: DB_HOST
               value: tekton-results-database-service.tekton-results.svc.cluster.local
             - name: DB_NAME
               value: tekton_results
-          image: quay.io/redhat-appstudio/tekton-results-api@sha256:dca434dccd576e7a186098779f678422f10ac16b395c67944ffa50633fc3dd2e
+            - name: LOGS_DATA
+              value: /app/tekton-results/logs
+            - name: S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: tekton-results-s3-credentials
+                  key: S3_ACCESS_KEY_ID
+                  optional: true
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: tekton-results-s3-credentials
+                  key: S3_SECRET_ACCESS_KEY
+                  optional: true
+          image: aandrienko/api-b1b7ffa9ba32f7c3020c3b68830b30a8:latest
           name: api
           volumeMounts:
+            - name: config
+              mountPath: /home/nonroot/env
             - mountPath: /etc/tls
               name: tls
               readOnly: true
+            - name: tekton-logs
+              mountPath: "/app/tekton-results/logs"
       serviceAccountName: tekton-results-api
       volumes:
+        - name: config
+          configMap:
+            name: tekton-results-api-config
         - name: tls
           secret:
             secretName: tekton-results-tls
+        - name: tekton-logs
+          persistentVolumeClaim:
+            claimName: tekton-logs
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -87,9 +109,27 @@ spec:
             - token
           image: quay.io/redhat-appstudio/tekton-results-watcher@sha256:801bfcfd4292dfd1239f638bcf88b0becb15af1263b81aff13f4f14db272e787
           name: watcher
+          env:
+            - name: SYSTEM_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: CONFIG_LOGGING_NAME
+              value: tekton-results-config-logging
+            - name: CONFIG_LEADERELECTION_NAME
+              value: tekton-results-config-leader-election
+            - name: CONFIG_OBSERVABILITY_NAME
+              value: tekton-results-config-observability
+            - name: METRICS_DOMAIN
+              value: tekton.dev/results
+          ports:
+            - name: metrics
+              containerPort: 9090
+            - name: profiling
+              containerPort: 8008
           volumeMounts:
-            - mountPath: /etc/tls
-              name: tls
+            - name: tls
+              mountPath: "/etc/tls"
               readOnly: true
       serviceAccountName: tekton-results-watcher
       volumes:

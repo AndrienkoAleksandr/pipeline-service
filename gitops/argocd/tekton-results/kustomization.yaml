@@ -8,4 +8,5 @@ resources:
   - configmap.yaml
   - cert.yaml
   - route.yaml
+  - pvc.yaml
   - deployment.yaml
