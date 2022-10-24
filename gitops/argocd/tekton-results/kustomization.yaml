@@ -14,7 +14,7 @@ resources:
 configMapGenerator:
   # Create a ConfigMap containing the API configs.
   - name: api-config
-    namespace: tekton-pipelines
+    namespace: tekton-results
     files:
       - env/config
     options:
