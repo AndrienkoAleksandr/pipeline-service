@@ -60,7 +60,7 @@ spec:
           securityContext:
             #runAsNonRoot: true
             #runAsUser: 1000690000
-            #fsGroup: GROUP_ID
+            fsGroup: GROUP_ID
           # command:
           #   - cat
           # args:
@@ -68,7 +68,7 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /home/nonroot/env
-              readOnly: true
+              #readOnly: true
             - mountPath: /etc/tls
               name: tls
               readOnly: true
