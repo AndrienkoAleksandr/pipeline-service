@@ -58,10 +58,9 @@ spec:
           imagePullPolicy: Always
           name: api
           command:
-            - ls
+            - cat
           args:
-            - -a
-            - /home/nonroot/env
+            - /home/nonroot/env/config
           volumeMounts:
             - name: config
               mountPath: /home/nonroot/env
