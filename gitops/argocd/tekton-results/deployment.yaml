@@ -57,10 +57,10 @@ spec:
           image: aandrienko/api-b1b7ffa9ba32f7c3020c3b68830b30a8:latest
           imagePullPolicy: Always
           name: api
-          command:
-            - cat
-          args:
-            - /home/nonroot/env/config
+          # command:
+          #   - cat
+          # args:
+          #   - /home/nonroot/env/config
           volumeMounts:
             - name: config
               mountPath: /home/nonroot/env
