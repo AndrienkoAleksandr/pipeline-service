@@ -10,3 +10,12 @@ resources:
   - route.yaml
   - pvc.yaml
   - deployment.yaml
+
+configMapGenerator:
+  # Create a ConfigMap containing the API configs.
+  - name: api-config
+    namespace: tekton-pipelines
+    files:
+      - env/config
+    options:
+      disableNameSuffixHash: true
