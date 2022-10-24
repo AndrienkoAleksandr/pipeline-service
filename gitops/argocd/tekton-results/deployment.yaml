@@ -58,7 +58,7 @@ spec:
           imagePullPolicy: Always
           name: api
           securityContext:
-            runAsNonRoot: true
+            # runAsNonRoot: true
             runAsUser: 1001
           # command:
           #   - cat
