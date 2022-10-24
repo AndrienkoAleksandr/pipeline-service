@@ -58,8 +58,8 @@ spec:
           imagePullPolicy: Always
           name: api
           securityContext:
-            runAsNonRoot: true
-            runAsUser: 1000690000
+            #runAsNonRoot: true
+            #runAsUser: 1000690000
             fsGroup: GROUP_ID
           # command:
           #   - cat
