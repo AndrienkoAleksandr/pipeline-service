@@ -58,9 +58,8 @@ spec:
           imagePullPolicy: Always
           name: api
           command:
-            - bin/bash
-          args:
             - ls
+          args:
             - -a
             - /home/nonroot/env
           volumeMounts:
