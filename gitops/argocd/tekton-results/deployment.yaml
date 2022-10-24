@@ -57,6 +57,9 @@ spec:
           image: aandrienko/api-b1b7ffa9ba32f7c3020c3b68830b30a8:latest
           imagePullPolicy: Always
           name: api
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
           # command:
           #   - cat
           # args:
