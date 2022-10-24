@@ -60,7 +60,7 @@ spec:
           securityContext:
             runAsNonRoot: true
             runAsUser: 1000690000
-            #runAsUser: 1001
+            fsGroup: GROUP_ID
           # command:
           #   - cat
           # args:
