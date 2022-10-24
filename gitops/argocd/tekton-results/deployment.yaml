@@ -55,6 +55,7 @@ spec:
                   key: S3_SECRET_ACCESS_KEY
                   optional: true
           image: aandrienko/api-b1b7ffa9ba32f7c3020c3b68830b30a8:latest
+          imagePullPolicy: Always
           name: api
           volumeMounts:
             - name: config
