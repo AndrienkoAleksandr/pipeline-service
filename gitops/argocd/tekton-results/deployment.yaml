@@ -59,7 +59,7 @@ spec:
           name: api
           securityContext:
             runAsNonRoot: true
-            runAsUser: 1000100001
+            runAsUser: 1000690000
             #runAsUser: 1001
           # command:
           #   - cat
