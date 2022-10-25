@@ -57,8 +57,10 @@ spec:
           image: aandrienko/api-b1b7ffa9ba32f7c3020c3b68830b30a8:latest
           imagePullPolicy: Always
           name: api
-          securityContext:
-            runAsNonRoot: true
+          #securityContext:
+            #runAsNonRoot: true
+            #runAsUser: 1000690000
+            #runAsGroup: 0
 
 
             #runAsUser: 1000690000
@@ -79,7 +81,8 @@ spec:
             - /dev/null
           volumeMounts:
             - name: config
-              mountPath: /config/env
+              #mountPath: /config/env
+              mountPath: /home/nonroot/env
               readOnly: true
             - mountPath: /etc/tls
               name: tls
