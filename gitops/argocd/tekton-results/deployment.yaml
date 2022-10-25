@@ -57,8 +57,10 @@ spec:
           image: aandrienko/api-b1b7ffa9ba32f7c3020c3b68830b30a8:latest
           imagePullPolicy: Always
           name: api
-          #securityContext:
-            #runAsNonRoot: true
+          # securityContext:
+          #   runAsNonRoot: true
+
+
             #runAsUser: 1000690000
 
             # runAsUser: 1000690000
@@ -69,6 +71,13 @@ spec:
           #   - cat
           # args:
           #   - /home/nonroot/env/config
+          command:
+            - /bin/bash
+            - -c
+          args:
+            - tail
+            - -f
+            - /dev/null
           volumeMounts:
             - name: config
               mountPath: /config/env
