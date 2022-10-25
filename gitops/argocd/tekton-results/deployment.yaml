@@ -73,7 +73,6 @@ spec:
           #   - /home/nonroot/env/config
           command:
             - /bin/bash
-            - -c
           args:
             - tail
             - -f
