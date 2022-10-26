@@ -73,12 +73,12 @@ spec:
           #   - cat
           # args:
           #   - /home/nonroot/env/config
-          command:
-            - /bin/bash
-          args:
-            - tail
-            - -f
-            - /dev/null
+          # command:
+          #   - /bin/bash
+          # args:
+          #   - tail
+          #   - -f
+          #   - /dev/null
           volumeMounts:
             - name: config
               #mountPath: /config/env
