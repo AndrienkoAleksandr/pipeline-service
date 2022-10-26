@@ -133,6 +133,7 @@ spec:
             - tekton-results-api-service.tekton-results.svc.cluster.local:50051
             - -auth_mode
             - token
+          imagePullPolicy: Always
           image: quay.io/redhat-appstudio/tekton-results-watcher@sha256:801bfcfd4292dfd1239f638bcf88b0becb15af1263b81aff13f4f14db272e787
           name: watcher
           env:
