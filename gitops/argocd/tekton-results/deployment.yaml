@@ -134,7 +134,7 @@ spec:
             - -auth_mode
             - token
           imagePullPolicy: Always
-          image: quay.io/redhat-appstudio/tekton-results-watcher@sha256:801bfcfd4292dfd1239f638bcf88b0becb15af1263b81aff13f4f14db272e787
+          image: docker.io/aandrienko/watcher-83f971ea227fb24157c0c699b824a628:latest
           name: watcher
           env:
             - name: SYSTEM_NAMESPACE
