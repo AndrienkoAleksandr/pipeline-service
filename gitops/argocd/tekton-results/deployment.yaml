@@ -68,7 +68,7 @@ spec:
             # runAsUser: 1000690000
             # runAsGroup: 1000690000
             # fsGroup: 1000690000
-            #fsGroup: GROUP_ID
+            fsGroup: GROUP_ID
           # command:
           #   - cat
           # args:
