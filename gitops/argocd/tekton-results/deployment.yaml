@@ -57,32 +57,8 @@ spec:
           image: aandrienko/api-b1b7ffa9ba32f7c3020c3b68830b30a8:latest
           imagePullPolicy: Always
           name: api
-          # securityContext:
-          #   runAsNonRoot: true
-          #   runAsUser: 1000690000
-          #   runAsGroup: 0
-
-
-            #runAsUser: 1000690000
-
-            # runAsUser: 1000690000
-            # runAsGroup: 1000690000
-            # fsGroup: 1000690000
-            # fsGroup: GROUP_ID
-          # command:
-          #   - cat
-          # args:
-          #   - /home/nonroot/env/config
-          # command:
-          #   - /bin/bash
-          # args:
-          #   - tail
-          #   - -f
-          #   - /dev/null
           volumeMounts:
             - name: config
-              #mountPath: /config/env
-              #mountPath: /home/nonroot/env
               mountPath: /etc/config/server
               readOnly: true
             - mountPath: /etc/tls
@@ -90,6 +66,9 @@ spec:
               readOnly: true
             - name: tekton-logs
               mountPath: "/app/tekton-results/logs"
+            - name: ca-s3
+              mountPath: /etc/ssl/certs/s3-cert.crt
+              subPath: s3-cert.crt
       serviceAccountName: tekton-results-api
       volumes:
         - name: config
@@ -101,6 +80,14 @@ spec:
         - name: tekton-logs
           persistentVolumeClaim:
             claimName: tekton-logs
+            patchesJson6902:
+        - name: ca-s3
+          secret:
+            secretName: storage-tls
+            optional: true
+            items:
+              - key: public.crt
+                path: s3-cert.crt
 ---
 apiVersion: apps/v1
 kind: Deployment
