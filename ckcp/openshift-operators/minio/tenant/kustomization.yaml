@@ -1,0 +1,10 @@
+
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: tekton-results
+resources:
+  - namespace.yaml
+  # - storage-user.yaml
+  - tenant-config.yaml
+  - tenant.yaml

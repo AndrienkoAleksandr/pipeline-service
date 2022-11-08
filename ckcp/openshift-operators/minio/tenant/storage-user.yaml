@@ -5,5 +5,5 @@ data:
 kind: Secret
 metadata:
   name: storage-user
-  namespace: default
+  namespace: tekton-results
 type: Opaque

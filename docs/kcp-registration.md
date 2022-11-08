@@ -10,7 +10,7 @@ Alternatively the registration can be performed by manually calling the registra
 
 ```bash
 KCP_ORG="root:pipeline-service" KCP_WORKSPACE="compute" KCP_SYNC_TAG="v0.9.0" 
-WORKSPACE_DIR="/workspace" ./images/kcp-registrar/register.sh
+WORKSPACE_DIR="/workspace" ./images/kcp-registrar/bin/register.sh
 ```
 
 | Name | Description |

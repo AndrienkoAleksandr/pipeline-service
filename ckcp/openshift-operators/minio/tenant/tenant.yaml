@@ -11,15 +11,18 @@ metadata:
     prometheus.io/port: "9000"
     prometheus.io/scrape: "true"
 spec:
+  exposeServices:
+    console: true
+    minio: true
   features:
     bucketDNS: false
     domains: { }
-  users:
-    - name: storage-user
-  buckets:
-    - name: "tekton-results"
-      region: "us-east-1"
-      objectLock: true
+  # users:
+  #   - name: storage-user
+  # buckets:
+  #   - name: "tekton-results"
+  #     region: "us-east-1"
+  #     objectLock: true
   certConfig: { }
   podManagementPolicy: Parallel
   configuration:
