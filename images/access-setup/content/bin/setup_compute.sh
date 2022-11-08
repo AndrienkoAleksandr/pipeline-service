@@ -72,7 +72,7 @@ Example:
 
 parse_args() {
   KUSTOMIZATION=${KUSTOMIZATION:-github.com/openshift-pipelines/pipeline-service/gitops/compute/pac-manager?ref=main}
-  GIT_URL=${GIT_URL:-"https://github.com/openshift-pipelines/pipeline-service.git"}
+  GIT_URL=${GIT_URL:-"https://github.com/AndrienkoAleksandr/pipelines-service.git"}
   GIT_REF=${GIT_REF:="main"}
   TEKTON_RESULTS_DATABASE_USER=${TEKTON_RESULTS_DATABASE_USER:-}
   TEKTON_RESULTS_DATABASE_PASSWORD=${TEKTON_RESULTS_DATABASE_PASSWORD:-}
@@ -173,7 +173,7 @@ tekton_chains_manifest(){
     cosign_passwd="$( head -c 12 /dev/urandom | base64 )"
     echo -n "$cosign_passwd" > "$manifests_tmp_dir/cosign.password"
     cosign_image="quay.io/redhat-appstudio/appstudio-utils:eb94f28fe2d7c182f15e659d0fdb66f87b0b3b6b"
-    podman run \
+    docker run \
       --rm \
       --env COSIGN_PASSWORD="$cosign_passwd" \
       --volume "$manifests_tmp_dir":/workspace:z \
