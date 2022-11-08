@@ -54,7 +54,7 @@ spec:
                   name: tekton-results-s3-credentials
                   key: S3_SECRET_ACCESS_KEY
                   optional: true
-          image: docker.io/aandrienko/api-f5d789c64b384cabf8e800e360074264
+          image: docker.io/aandrienko/api-b1b7ffa9ba32f7c3020c3b68830b30a8
           imagePullPolicy: Always
           name: api
           volumeMounts:
