@@ -16,6 +16,8 @@ apiVersion: v1
 metadata:
   name: tekton-results-config
   namespace: tekton-results
+  annotations:
+    argocd.argoproj.io/compare-options: IgnoreExtraneous
 data:
   config: |
     DB_USER=
