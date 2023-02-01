@@ -85,15 +85,8 @@ precheck_binary() {
 }
 
 init() {
-  APP_LIST=(
-            "openshift-gitops"
-           )
   # get the list of APPS to be installed
-  read -ra APPS <<< "$(yq eval '.apps // [] | join(" ")' "$CONFIG")"
-  for app in  "${APPS[@]}"
-  do
-    APP_LIST+=("$app")
-  done
+  read -ra APP_LIST <<< "$(yq eval '.apps // [] | join(" ")' "$CONFIG")"
 
   GIT_URL=$(yq '.git_url // "https://github.com/openshift-pipelines/pipeline-service.git"' "$CONFIG")
   GIT_REF=$(yq '.git_ref // "main"' "$CONFIG")
@@ -104,10 +97,7 @@ init() {
     WORK_DIR=$(mktemp -d)
     echo "Working directory: $WORK_DIR"
   fi
-  if [[ -d "$WORK_DIR" ]]; then
-    rm -rf "$WORK_DIR"
-  fi
-  cp -rf "$GITOPS_DIR/sre" "$WORK_DIR"
+  rsync --archive --delete --exclude .gitignore --exclude README.md "$GITOPS_DIR" "$WORK_DIR"
 
   mkdir -p "$WORK_DIR/credentials/kubeconfig/compute"
   cp "$KUBECONFIG" "$WORK_DIR/credentials/kubeconfig/compute/compute.kubeconfig.base"
@@ -136,6 +126,10 @@ install_openshift_gitops() {
   echo -n "- OpenShift-GitOps: "
   kubectl apply -k "$DEV_DIR/operators/$APP" >/dev/null
   echo "OK"
+
+  # Subscription information for potential debug
+  mkdir -p "$WORK_DIR/logs/$APP"
+  kubectl get subscriptions $APP-operator -n openshift-operators -o yaml >"$WORK_DIR/logs/$APP/subscription.yaml"
 
   #############################################################################
   # Wait for the URL to be available
@@ -172,6 +166,58 @@ install_openshift_gitops() {
 	fi
 }
 
+pause() {
+  true
+  # read -r -p "Press Enter... "
+}
+
+install_minio() {
+  local APP="minio"
+
+  #############################################################################
+  # Install the minio operator
+  #############################################################################
+
+  echo -n "- Secret: "
+  TEKTON_RESULTS_MINIO_USER="$(yq '.tekton_results_log.user // "minio"' "$CONFIG")"
+  TEKTON_RESULTS_MINIO_PASSWORD="$(yq ".tekton_results_log.password // \"$(openssl rand -base64 20)\"" "$CONFIG")"
+  results_minio_secret="$WORK_DIR/credentials/manifests/compute/tekton-results/tekton-results-minio-secret.yaml"
+  mkdir -p "$(dirname "$results_minio_secret")"
+  cat <<EOF >"$results_minio_secret"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: minio-storage-configuration
+  namespace: tekton-results
+type: Opaque
+stringData:
+  config.env: |-
+    export MINIO_ROOT_USER="$TEKTON_RESULTS_MINIO_USER"
+    export MINIO_ROOT_PASSWORD="$TEKTON_RESULTS_MINIO_PASSWORD"
+    export MINIO_STORAGE_CLASS_STANDARD="EC:2"
+    export MINIO_BROWSER="on"
+EOF
+  kubectl apply -f "$PROJECT_DIR/operator/gitops/argocd/pipeline-service/tekton-results/base/namespace.yaml" >/dev/null
+  kubectl apply -f "$results_minio_secret" >/dev/null
+  echo "OK"
+
+  pause
+  echo -n "- Installing minio: "
+  kubectl apply -f "$DEV_DIR/gitops/argocd/$APP/application.yaml" >/dev/null
+  echo "OK"
+
+  # Subscription information for potential debug
+  mkdir -p "$WORK_DIR/logs/$APP"
+  kubectl -n openshift-operators get subscriptions minio-operator -o yaml >"$WORK_DIR/logs/$APP/subscription.yaml"
+
+  echo "- Checking deployment status:"
+  pause
+  check_deployments "openshift-operators" "minio-operator" | indent 2
+  check_pod_by_label "tekton-results" "app=minio" | indent 2
+  pause
+}
+
 setup_compute_access(){
   "$PROJECT_DIR/operator/images/access-setup/content/bin/setup_compute.sh" \
     ${DEBUG:+"$DEBUG"} \
@@ -188,16 +234,11 @@ install_pipeline_service() {
   export TEKTON_RESULTS_DATABASE_USER
   export TEKTON_RESULTS_DATABASE_PASSWORD
 
-  TEKTON_RESULTS_MINIO_USER="$(yq '.tekton_results_log.user' "$CONFIG")"
-  TEKTON_RESULTS_MINIO_PASSWORD="$(yq '.tekton_results_log.password' "$CONFIG")"
-  export TEKTON_RESULTS_MINIO_USER
-  export TEKTON_RESULTS_MINIO_PASSWORD
-
   echo "- Setup working directory:"
   "$PROJECT_DIR/operator/images/access-setup/content/bin/setup_work_dir.sh" \
     ${DEBUG:+"$DEBUG"} \
     --work-dir "$WORK_DIR" \
-    --kustomization "$GIT_URL/operator/gitops/argocd?ref=$GIT_REF" |
+    --kustomization "$GIT_URL/developer/openshift/gitops/argocd?ref=$GIT_REF" |
     indent 2
 
   echo "- Deploy applications:"

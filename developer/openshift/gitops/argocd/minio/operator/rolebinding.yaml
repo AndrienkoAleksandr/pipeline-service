@@ -1,0 +1,13 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: "minio-manager-binding"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: minio-admin
+subjects:
+  - kind: ServiceAccount
+    name: pipeline-service-manager
+    namespace: pipeline-service
