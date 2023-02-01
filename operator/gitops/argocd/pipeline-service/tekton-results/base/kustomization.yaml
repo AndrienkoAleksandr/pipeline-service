@@ -29,3 +29,12 @@ patchesJson6902:
         path: "/metadata/labels"
         value:
           argocd.argoproj.io/managed-by: openshift-gitops
+
+configMapGenerator:
+  - name: my-map
+    namespace: tekton-results
+    literals:
+      - foo=bar
+generatorOptions:
+  annotations:
+    argocd.argoproj.io/compare-options: IgnoreExtraneous

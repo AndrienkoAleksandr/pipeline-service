@@ -134,7 +134,7 @@ install_clusters() {
     printf -- "- Installing applications via Openshift GitOps... \n"
     install_applications | indent 4
 
-    configure_tekton_results_to_connect_to_minio
+    # configure_tekton_results_to_connect_to_minio
 
     #checking if the pipelines and triggers pods are up and running
     printf -- "- Checking deployment status\n"
