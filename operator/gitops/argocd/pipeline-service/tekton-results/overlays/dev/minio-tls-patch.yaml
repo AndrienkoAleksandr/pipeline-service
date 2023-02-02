@@ -5,6 +5,7 @@
     name: ca-s3
     secret:
       secretName: storage-tls
+      optional: true
       items:
         - key: public.crt
           path: s3-cert.crt

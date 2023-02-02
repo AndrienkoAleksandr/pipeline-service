@@ -36,6 +36,8 @@ patchesJson6902:
 configMapGenerator:
   - name: tekton-results-config
     namespace: tekton-results
+    files:
+      - config
     literals:
       - foo=bar
       - DB_USER=
