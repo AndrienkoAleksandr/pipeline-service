@@ -30,6 +30,9 @@ patchesJson6902:
         value:
           argocd.argoproj.io/managed-by: openshift-gitops
 
+# generatorOptions:
+#   disableNameSuffixHash: true
+
 configMapGenerator:
   - name: tekton-results-config
     namespace: tekton-results
@@ -59,3 +62,4 @@ configMapGenerator:
 generatorOptions:
   annotations:
     argocd.argoproj.io/compare-options: IgnoreExtraneous
+  disableNameSuffixHash: true
