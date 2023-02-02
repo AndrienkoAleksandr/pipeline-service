@@ -5,7 +5,7 @@ resources:
   - namespace.yaml
   - permissions.yaml
   - service-account.yaml
-  - configmap.yaml
+  - config
   - route.yaml
   - deployment.yaml
   - service.yaml
@@ -30,12 +30,3 @@ patchesJson6902:
         value:
           argocd.argoproj.io/managed-by: openshift-gitops
 
-configMapGenerator:
-  - name: tekton-results-config
-    namespace: tekton-results
-    files:
-      - config
-generatorOptions:
-  annotations:
-    argocd.argoproj.io/compare-options: IgnoreExtraneous
-  disableNameSuffixHash: true

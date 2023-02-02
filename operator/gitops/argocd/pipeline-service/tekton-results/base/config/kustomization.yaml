@@ -1,0 +1,16 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - configmap.yaml
+
+configMapGenerator:
+  - name: tekton-results-config
+    namespace: tekton-results
+    files:
+      - config
+generatorOptions:
+  annotations:
+    argocd.argoproj.io/compare-options: IgnoreExtraneous
+  disableNameSuffixHash: true
