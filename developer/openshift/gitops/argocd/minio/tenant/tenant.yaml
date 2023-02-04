@@ -10,6 +10,7 @@ metadata:
     prometheus.io/path: /minio/v2/metrics/cluster
     prometheus.io/port: "9000"
     prometheus.io/scrape: "true"
+    argocd.argoproj.io/hook: Sync
 spec:
   exposeServices:
     console: true

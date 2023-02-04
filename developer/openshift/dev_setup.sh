@@ -209,7 +209,7 @@ EOF
 
   # Subscription information for potential debug
   mkdir -p "$WORK_DIR/logs/$APP"
-  kubectl -n openshift-operators get subscriptions minio-operator -o yaml >"$WORK_DIR/logs/$APP/subscription.yaml"
+  # kubectl -n openshift-operators get subscriptions minio-operator -o yaml >"$WORK_DIR/logs/$APP/subscription.yaml"
 
   echo "- Checking deployment status:"
   pause
