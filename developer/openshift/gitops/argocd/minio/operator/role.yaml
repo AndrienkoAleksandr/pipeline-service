@@ -29,14 +29,6 @@ rules:
       - "create"
       - "update"
   - apiGroups:
-      - security.openshift.io
-    resourceNames:
-      - nonroot
-    resources:
-      - securitycontextconstraints
-    verbs:
-      - use
-  - apiGroups:
       - operators.coreos.com
     resources:
       - subscriptions

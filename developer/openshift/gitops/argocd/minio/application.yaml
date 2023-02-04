@@ -4,6 +4,8 @@ kind: Application
 metadata:
   name: minio
   namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-options: Validate=false
 spec:
   destination:
     namespace: openshift-gitops
