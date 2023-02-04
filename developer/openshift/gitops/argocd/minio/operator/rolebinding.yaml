@@ -4,7 +4,8 @@ kind: ClusterRoleBinding
 metadata:
   name: "minio-manager-binding"
   annotations:
-    argocd.argoproj.io/hook: PreSync
+    # argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/sync-wave: "2"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole

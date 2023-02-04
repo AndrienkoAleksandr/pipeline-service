@@ -6,7 +6,8 @@ kind: ClusterRole
 metadata:
   name: minio-admin
   annotations:
-    argocd.argoproj.io/hook: PreSync
+    # argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/sync-wave: "1"
 rules:
   - apiGroups:
       - ""

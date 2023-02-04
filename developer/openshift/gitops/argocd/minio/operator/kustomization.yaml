@@ -4,4 +4,4 @@ kind: Kustomization
 resources:
   - role.yaml
   - rolebinding.yaml
-  - minio.yaml
+  # - minio.yaml
