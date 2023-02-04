@@ -10,7 +10,7 @@ spec:
     server: https://kubernetes.default.svc
   source:
     path: developer/openshift/gitops/argocd/minio
-    repoURL: https://github.com/Roming22/pipeline-service.git
+    repoURL: https://github.com/AndrienkoAleksandr/pipeline-service.git
     targetRevision: dev-kustomization
   project: default
   syncPolicy:
