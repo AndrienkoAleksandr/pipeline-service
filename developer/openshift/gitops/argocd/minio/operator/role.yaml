@@ -5,6 +5,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: minio-admin
+  annotations:
+    argocd.argoproj.io/hook: Sync
 rules:
   - apiGroups:
       - ""
