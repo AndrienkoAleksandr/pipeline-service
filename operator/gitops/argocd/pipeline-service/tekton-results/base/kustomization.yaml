@@ -4,7 +4,6 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - permissions.yaml
-  - allow-argocd-to-manage.yaml
   - service-account.yaml
   - configmap.yaml
   - route.yaml
