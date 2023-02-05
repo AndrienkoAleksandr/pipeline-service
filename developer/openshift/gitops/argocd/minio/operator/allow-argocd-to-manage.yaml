@@ -25,6 +25,7 @@ rules:
       - ""
     resources:
       - serviceaccounts
+      - services
     verbs:
       - create
 ---
