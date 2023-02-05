@@ -5,7 +5,6 @@ metadata:
   name: minio-operator
   namespace: openshift-operators
   annotations:
-    # argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/sync-wave: "3"
 spec:
   channel: stable
