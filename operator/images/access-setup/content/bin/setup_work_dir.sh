@@ -190,7 +190,7 @@ tekton_results_manifest(){
       --from-literal=DATABASE_PASSWORD="$TEKTON_RESULTS_DATABASE_PASSWORD" \
       --dry-run=client -o yaml > "$results_secret"
 
-    yq e -n '.resources += ["namespace.yaml", "tekton-results-secret.yaml", "tekton-results-minio-secret.yaml"]' > "$results_kustomize"
+    yq e -n '.resources += ["namespace.yaml", "tekton-results-secret.yaml"]' > "$results_kustomize"
     if [ "$(yq ".data" < "$results_secret" | grep -cE "DATABASE_USER|DATABASE_PASSWORD")" != "2" ]; then
       printf "[ERROR] Invalid manifest: '%s'" "$results_secret" >&2
       exit 1

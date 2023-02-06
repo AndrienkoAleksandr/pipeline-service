@@ -9,6 +9,14 @@ spec:
     spec:
       containers:
         - name: api
-          envFrom:
-            - secretRef:
-                name: minio-storage-configuration
+          env:
+            - name: S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  key: S3_ACCESS_KEY_ID
+                  name: s3-credentials
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: S3_SECRET_ACCESS_KEY
+                  name: s3-credentials
