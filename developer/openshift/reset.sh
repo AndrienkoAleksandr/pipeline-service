@@ -107,6 +107,41 @@ prechecks() {
 }
 
 uninstall_pipeline_service() {
+    printf "\n  Uninstalling Minio:\n"
+    if argocd app get minio >/dev/null 2>&1; then
+      argocd app delete minio --yes
+
+      mapfile -t minio_crds < <(kubectl get crd -n openshift-operators| grep -iE "minio-operator" | cut -d " " -f 1)
+      if [[ "${#minio_crds[@]}" -gt 0 ]]; then
+        for crd in "${minio_crds[@]}"; do
+          kubectl delete crd "$crd" &
+          kubectl patch crd "$crd" --type json --patch='[ { "op": "remove", "path": "/metadata/finalizers" } ]' >/dev/null 2>&1
+          wait
+        done
+      fi
+
+      mapfile -t minio_install_plans < <(kubectl get installplan -n openshift-operators | grep -iE "minio-operator" | cut -d " " -f 1)
+      if [[ "${#minio_install_plans[@]}" -gt 0 ]]; then
+        for installplan in "${minio_install_plans[@]}"; do
+          kubectl delete installplan "$installplan" -n openshift-operators
+        done
+      fi
+
+      minio_gitops_csv=$(kubectl get csv -n openshift-operators | grep -ie "minio-operator" | cut -d " " -f 1)
+      if [[ -n "$minio_gitops_csv" ]]; then
+        kubectl delete csv -n openshift-operators "$minio_gitops_csv"
+      fi
+
+      minio_operator=$(kubectl get operator | grep -ie "minio" | cut -d " " -f 1)
+      echo "$minio_operator"
+      if [[ -n "$minio_operator" ]]; then
+        echo "Delete operator cr"
+        kubectl delete operator "$minio_operator"
+      fi
+    fi
+
+    echo "=== Compute dir: $COMPUTE_DIR"
+
     printf "\n  Uninstalling Pipeline Service:\n"
     # Remove pipeline-service Argo CD application
     if ! argocd app get pipeline-service >/dev/null 2>&1; then
@@ -151,7 +186,7 @@ uninstall_operators(){
     if [[ -n "$gitops_operator" ]]; then
       kubectl delete operator "$gitops_operator"
     fi
-
+#
     printf "\n  Uninstalling PAC:\n"
     kubectl delete -k "$GITOPS_DIR/pipelines-as-code" --ignore-not-found=true
     pac_ns=$(kubectl get ns | grep -ie "pipelines-as-code" | cut -d " " -f 1)
