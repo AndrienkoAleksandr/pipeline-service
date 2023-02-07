@@ -21,6 +21,7 @@ RUN microdnf install -y \
       findutils-4.8.0 \
       git-2.31.1 \
       unzip-6.0 \
+      rsync-3.2.3 \
     && microdnf clean all
 
 COPY shared /tmp/image-build/shared
