@@ -117,12 +117,10 @@ uninstall_pipeline_service() {
     echo "OK"
 
     printf "\n  Uninstalling Minio:\n"
-    # if argocd app get minio >/dev/null 2>&1; then
-      
+    if argocd app get minio >/dev/null 2>&1; then
       # Remove any finalizers that might inhibit deletion
       if argocd app get minio >/dev/null 2>&1; then
-          kubectl patch applications.argoproj.io -n openshift-gitops minio --type json --patch='[ { "op": "remove", "path": "/metadata/finalizers" } ]'
-          #  >/dev/null 2>&1
+          kubectl patch applications.argoproj.io -n openshift-gitops minio --type json --patch='[ { "op": "remove", "path": "/metadata/finalizers" } ]' >/dev/null 2>&1
       fi
       argocd app delete minio --yes
 
@@ -145,9 +143,6 @@ uninstall_pipeline_service() {
         for crd in "${minio_crds[@]}"; do
           echo "Delete crd $crd"
           kubectl delete crd "$crd"
-          #  &
-          # kubectl patch crd "$crd" --type json --patch='[ { "op": "remove", "path": "/metadata/finalizers" } ]' >/dev/null 2>&1
-          # wait
         done
       fi
 
@@ -157,16 +152,14 @@ uninstall_pipeline_service() {
         echo "Delete operator cr"
         kubectl delete operator "$minio_operator"
       fi
-    # fi
-
-    echo "=== Compute dir: $COMPUTE_DIR"
+    fi
 
     printf "\n  Uninstalling Pipeline Service:\n"
     # Remove pipeline-service Argo CD application
-    # if ! argocd app get pipeline-service >/dev/null 2>&1; then
-    #   printf "\n[ERROR] Couldn't find the 'pipeline-service' application in argocd apps.\n" >&2
-    #   exit 1
-    # fi
+    if ! argocd app get pipeline-service >/dev/null 2>&1; then
+      printf "\n[ERROR] Couldn't find the 'pipeline-service' application in argocd apps.\n" >&2
+      exit 1
+    fi
 
     argocd app delete pipeline-service --yes
     # Remove any finalizers that might inhibit deletion
