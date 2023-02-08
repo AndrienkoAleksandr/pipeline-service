@@ -114,20 +114,27 @@ prechecks() {
 uninstallOpenshiftPipelinesOLMPart() {
     printf "\n  Uninstalling Openshift-Pipelines Operator:\n"
 
+    kubectl delete tektonconfig config
     # hard reset mode...
     # We start with deleting tektonconfig so that the 'tekton.dev' CRs are removed gracefully by it.
-    # kubectl delete tektonconfig config
     # kubectl delete -k "$GITOPS_DIR/openshift-pipelines" --ignore-not-found=true
     openshift_pipelines_csv=$(kubectl get csv -n openshift-operators | grep -ie "openshift-pipelines-operator" | cut -d " " -f 1)
     if [[ -n "$openshift_pipelines_csv" ]]; then
       kubectl delete csv -n openshift-operators "$openshift_pipelines_csv"
     fi
     mapfile -t tekton_crds < <(kubectl get crd | grep -ie "tekton.dev" | cut -d " " -f 1)
+    # tektonConfCrd="tektonconfigs.operator.tekton.dev"
+    # tekton_crds=( "${tekton_crds[@]/$tektonConfCrd}" )
+
+    # kubectl delete crd $tektonConfCrd
+
     if [[ "${#tekton_crds[@]}" -gt 0 ]]; then
       for crd in "${tekton_crds[@]}"; do
-        kubectl delete crd "$crd" &
-        kubectl patch crd "$crd" --type json --patch='[ { "op": "remove", "path": "/metadata/finalizers" } ]' >/dev/null 2>&1
-        wait
+        # if [ -n "$crd" ]; then
+          kubectl delete crd "$crd" &
+          kubectl patch crd "$crd" --type json --patch='[ { "op": "remove", "path": "/metadata/finalizers" } ]' >/dev/null 2>&1
+          wait
+        # fi
       done
     fi
     openshift_pipelines_operator=$(kubectl get operator | grep -ie "openshift-pipelines-operator" | cut -d " " -f 1)
