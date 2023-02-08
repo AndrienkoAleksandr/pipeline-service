@@ -4,8 +4,6 @@ kind: Application
 metadata:
   name: minio
   namespace: openshift-gitops
-  annotations:
-    argocd.argoproj.io/sync-options: Validate=false
 spec:
   destination:
     namespace: openshift-gitops
@@ -24,6 +22,8 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      # workaround to make working both minio: newer and old 4.5.4
+      - Validate=false
     retry:
       limit: -1 # number of failed sync attempt retries; unlimited number of attempts if less than 0
       backoff:
