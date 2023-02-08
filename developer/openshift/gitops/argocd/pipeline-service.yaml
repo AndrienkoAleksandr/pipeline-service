@@ -11,7 +11,7 @@ spec:
   source:
     path: developer/openshift/gitops/argocd/pipeline-service
     repoURL: https://github.com/AndrienkoAleksandr/pipeline-service.git
-    targetRevision: dev-kustomization
+    targetRevision: dev-kustomization-3
   project: default
   syncPolicy:
     # Comment this out if you want to manually trigger deployments (using the
