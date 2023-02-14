@@ -260,9 +260,9 @@ uninstall_operators_and_controllers(){
     fi
 
     # Checks if the operators are uninstalled successfully
-    mapfile -t operators < <(kubectl get operators | grep -iE "openshift-gitops-operator|minio-operator" | cut -d " " -f 1)
+    mapfile -t operators < <(kubectl get operators | grep -iE "openshift-gitops-operator" | cut -d " " -f 1)
     if (( ${#operators[@]} >= 1 )); then
-        printf "\n[ERROR] Couldn't uninstall giops or minio operators, please try removing them manually." >&2
+        printf "\n[ERROR] Couldn't uninstall giops or operators, please try removing them manually." >&2
         exit 1
     fi
 
@@ -273,7 +273,7 @@ uninstall_operators_and_controllers(){
         exit 1
     fi
 
-    printf "\nGitops, minio operators and Tekton controllers are successfully uninstalled.\n"
+    printf "\nGitops operator and Tekton controllers are successfully uninstalled.\n"
 }
 
 is_hard_reset_enabled() {
