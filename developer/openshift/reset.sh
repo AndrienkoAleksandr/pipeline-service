@@ -340,4 +340,5 @@ main(){
 
 if [ "${BASH_SOURCE[0]}" == "$0" ]; then
     main "$@"
+    printf "[INFO] Unistallation pipeline-service completed."
 fi
