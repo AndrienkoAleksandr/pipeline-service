@@ -106,23 +106,27 @@ prechecks() {
     export KUBECONFIG="$KUBECONFIG"
 }
 
-uinstall_minio() {
+uninstall_minio() {
     printf "\n  Uninstalling Minio:\n"
-    if argocd app get minio >/dev/null 2>&1; then
+    # if argocd app get minio >/dev/null 2>&1; then
       # Remove any finalizers that might inhibit deletion
       if argocd app get minio >/dev/null 2>&1; then
           kubectl patch applications.argoproj.io -n openshift-gitops minio --type json --patch='[ { "op": "remove", "path": "/metadata/finalizers" } ]' >/dev/null 2>&1
       fi
       argocd app delete minio --yes
 
-      # oc delete subscription minio-operator -n openshift-operators
-      kubectl delete -k "$DEV_DIR/gitops/argocd/minio" --ignore-not-found=true
+      # # Check if the Argo CD application have been indeed removed
+      # if argocd app get minio >/dev/null 2>&1; then
+      #     printf "\n[ERROR] Couldn't uninstall Minio Argo CD application." >&2
+      #     exit 1
+      # fi
 
-      # Check if the Argo CD application have been indeed removed
-      if argocd app get minio >/dev/null 2>&1; then
-          printf "\n[ERROR] Couldn't uninstall Minio Argo CD application." >&2
-          exit 1
-      fi
+      # kubectl delete tenant storage -n tekton-results
+      # oc delete subscription minio-operator -n openshift-operators
+      kubectl delete -k "$DEV_DIR/gitops/argocd/minio/tenant" 
+      # --ignore-not-found=true
+      kubectl delete -k "$DEV_DIR/gitops/argocd/minio/operator" 
+      # --ignore-not-found=true
 
       printf "\n  Uninstalling Minio Operator:\n"
       minio_gitops_csv=$(kubectl get csv -n openshift-operators | grep -ie "minio-operator" | cut -d " " -f 1)
@@ -138,21 +142,24 @@ uinstall_minio() {
         done
       fi
 
+kubectl get crd tenant
+sleep 60
       minio_operator=$(kubectl get operator | grep -ie "minio" | cut -d " " -f 1)
       if [[ -n "$minio_operator" ]]; then
         printf "\n    Delete operator cr %s\n" "$minio_operator"
         kubectl delete operator "$minio_operator"
       fi
-    fi
+      exit 1
+    # fi
 }
 
 uninstall_pipeline_service() {
     printf "\n  Uninstalling Pipeline Service:\n"
     # Remove pipeline-service Argo CD application
-    if ! argocd app get pipeline-service >/dev/null 2>&1; then
-      printf "\n[ERROR] Couldn't find the 'pipeline-service' application in argocd apps.\n" >&2
-      exit 1
-    fi
+    # if ! argocd app get pipeline-service >/dev/null 2>&1; then
+    #   printf "\n[ERROR] Couldn't find the 'pipeline-service' application in argocd apps.\n" >&2
+    #   exit 1
+    # fi
 
     argocd app delete pipeline-service --yes
     # Remove any finalizers that might inhibit deletion
@@ -172,7 +179,7 @@ uninstall_pipeline_service() {
     printf "\nPipeline-Service Argo CD application has been successfully removed.\n"
 }
 
-uninstall_operators(){
+uninstall_operators_and_controllers(){
     printf "\n  Uninstalling Openshift-GitOps Operator:\n"
     kubectl delete -k "$DEV_DIR/operators/openshift-gitops" --ignore-not-found=true
     openshift_gitops_csv=$(kubectl get csv -n openshift-operators | grep -ie "openshift-gitops-operator" | cut -d " " -f 1)
@@ -214,10 +221,20 @@ uninstall_operators(){
     if [[ -n "$pac_ns" ]]; then
       kubectl delete ns "$tkn_results_ns"
     fi
+}
 
+is_hard_reset_enabled() {
+  if [ "$(echo "$RESET_HARD" | tr "[:upper:]" "[:lower:]")" == "true" ] || [ "$RESET_HARD" == "1" ]; then
+    echo "true"
+  else
+    echo "false"
+  fi
+}
+
+uninstallOpenshiftPipelinesOLMPart() {
     printf "\n  Uninstalling Openshift-Pipelines Operator:\n"
     # We start with deleting tektonconfig so that the 'tekton.dev' CRs are removed gracefully by it.
-    kubectl delete tektonconfig config
+    kubectl delete tektonconfig config --ignore-not-found=true
     kubectl delete -k "$GITOPS_DIR/openshift-pipelines" --ignore-not-found=true
     openshift_pipelines_csv=$(kubectl get csv -n openshift-operators | grep -ie "openshift-pipelines-operator" | cut -d " " -f 1)
     if [[ -n "$openshift_pipelines_csv" ]]; then
@@ -236,8 +253,17 @@ uninstall_operators(){
       kubectl delete operator "$openshift_pipelines_operator"
     fi
 
+    # Checks if the operator are uninstalled successfully
+    mapfile -t operators < <(kubectl get operators | grep -iE "openshift-pipelines-operator" | cut -d " " -f 1)
+    if (( ${#operators[@]} >= 1 )); then
+        printf "\n[ERROR] Couldn't uninstall all Operators, please try removing them manually." >&2
+        exit 1
+    fi
+}
+
+check_if_operators_and_controllers_removed() {
     # Checks if the operators are uninstalled successfully
-    mapfile -t operators < <(kubectl get operators | grep -iE "openshift-gitops-operator|openshift-pipelines-operator" | cut -d " " -f 1)
+    mapfile -t operators < <(kubectl get operators | grep -iE "openshift-gitops-operator" | cut -d " " -f 1)
     if (( ${#operators[@]} >= 1 )); then
         printf "\n[ERROR] Couldn't uninstall all Operators, please try removing them manually." >&2
         exit 1
@@ -256,11 +282,15 @@ uninstall_operators(){
 main(){
     parse_args "$@"
     prechecks
-    uinstall_minio
+    uninstall_minio
     uninstall_pipeline_service
-    if [ "$(echo "$RESET_HARD" | tr "[:upper:]" "[:lower:]")" == "true" ] || [ "$RESET_HARD" == "1" ]; then
-      uninstall_operators
+
+    if [ "$(is_hard_reset_enabled)" == "true" ]; then
+      uninstall_operators_and_controllers
+      check_if_operators_and_controllers_removed
     fi
+
+    uninstallOpenshiftPipelinesOLMPart
 }
 
 if [ "${BASH_SOURCE[0]}" == "$0" ]; then
