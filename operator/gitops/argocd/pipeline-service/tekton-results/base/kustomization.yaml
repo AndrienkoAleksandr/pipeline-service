@@ -12,8 +12,8 @@ images:
     newName: docker.io/aandrienko/api-b1b7ffa9ba32f7c3020c3b68830b30a8
     newTag: latest
   - name: ko://github.com/tektoncd/results/cmd/watcher
-    newName: quay.io/redhat-appstudio/tekton-results-watcher
-    newTag: 9a1f0cb73f3f3013a7f3770c78f715f5c337772c
+    newName: docker.io/aandrienko/watcher-83f971ea227fb24157c0c699b824a628
+    newTag: latest
 
 # generate a new configmap with updated values (logs api, db ssl mode) and replace the default one
 configMapGenerator:
