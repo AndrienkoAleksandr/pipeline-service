@@ -5,12 +5,12 @@ namespace: tekton-results
 resources:
   - namespace.yaml
   - route.yaml
-  - https://github.com/openshift-pipelines/tektoncd-results//config/?ref=9a1f0cb73f3f3013a7f3770c78f715f5c337772c
+  - https://github.com/tektoncd/results//config/?ref=d05e5cfa494c00eec6013f71edd600b99c554cb6
 
 images:
   - name: ko://github.com/tektoncd/results/cmd/api
-    newName: quay.io/redhat-appstudio/tekton-results-api
-    newTag: 9a1f0cb73f3f3013a7f3770c78f715f5c337772c
+    newName: docker.io/aandrienko/api-b1b7ffa9ba32f7c3020c3b68830b30a8
+    newTag: latest
   - name: ko://github.com/tektoncd/results/cmd/watcher
     newName: quay.io/redhat-appstudio/tekton-results-watcher
     newTag: 9a1f0cb73f3f3013a7f3770c78f715f5c337772c
