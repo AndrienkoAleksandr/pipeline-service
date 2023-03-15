@@ -50,3 +50,7 @@ spec:
                 secretKeyRef:
                   key: endpoint
                   name: tekton-results-s3
+          volumeMounts:
+            - name: ca-s3
+              mountPath: /etc/ssl/certs/s3-cert.crt
+              subPath: s3-cert.crt
