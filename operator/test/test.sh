@@ -219,6 +219,8 @@ test_results() {
     QUERY_RESULT=$("${QUERY_CMD[@]}" 2>/dev/null)
     wait
 
+    echo ${QUERY_RESULT}
+
     # we are not interested in the content of the logs or records so just checking if the query result contains certain string (uid/type) 
     if [[ $QUERY_RESULT == *"$RESULT_UID/$1"* ]]; then
       echo "OK"
@@ -226,6 +228,27 @@ test_results() {
       echo "Failed"
       echo "[ERROR] Unable to retrieve $1 for $RESULT_UID from pipeline run $pipeline_name" >&2
       exit 1
+    fi
+
+    if [ "${1}" == "logs" ]; then
+      echo "!!!!!!!!!!"
+      # QUERY_URL=${QUERY_URL}/${RESULT_UID}
+      # QUERY_RESULT=$("${QUERY_CMD[@]}" 2>/dev/null)
+      # wait
+
+      LOG_PATH=$(echo ${QUERY_RESULT} | jq -r ".records[0] | .data.value | @base64d" | jq -r ".status.path")
+      #  | jq -r ".records[] | select(.uid==\"${RESULT_UID}\") | .data.value | @base64d"
+      #  | jq -r ".status.path"
+      echo $LOG_PATH
+
+      QUERY_URL="https://$RESULT_ROUTE/apis/results.tekton.dev/v1alpha2/parents/${LOG_PATH}"
+      QUERY_CMD[6]="${QUERY_URL}"
+      echo "+================="
+      echo "${QUERY_CMD[@]}"
+      LOG_RESULT=$("${QUERY_CMD[@]}" 2>/dev/null)
+      wait
+
+      echo $LOG_RESULT
     fi
   }
 
