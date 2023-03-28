@@ -6,7 +6,7 @@ metadata:
 rules:
   - apiGroups: [""]
     resources: ["pods", "services", "namespaces", "endpoints"]
-    verbs: ["get", "list", "watch"]
+    verbs: ["get", "list", "watch", "delete"]
 
   - apiGroups: ["tekton.dev"]
     resources: ["pipelineruns", "taskruns"]
