@@ -28,4 +28,4 @@ spec:
         - name: REPO_REVISION
           value: $(params.revision)
       command:
-        - $(workspaces.source.path)/ci/images/ci-runner/hack/bin/run-plnsvc-setup.sh && oc get csv -n openshift-operators | grep minio
+        - $(workspaces.source.path)/ci/images/ci-runner/hack/bin/run-plnsvc-setup.sh && oc get csv -n openshift-operators | grep minio && exit 1
