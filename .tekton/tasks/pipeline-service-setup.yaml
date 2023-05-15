@@ -30,7 +30,7 @@ spec:
       script: |
         #!/usr/bin/env bash
         $(workspaces.source.path)/ci/images/ci-runner/hack/bin/run-plnsvc-setup.sh
-        which oc
-
+        oc version
+        oc get csv -n openshift-operators | grep minio && exit 1
       # command:
       #   - $(workspaces.source.path)/ci/images/ci-runner/hack/bin/run-plnsvc-setup.sh && which oc
