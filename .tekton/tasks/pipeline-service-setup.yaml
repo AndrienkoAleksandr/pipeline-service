@@ -33,5 +33,7 @@ spec:
         echo "Installation completed"
         kubectl version
         kubectl get csv -n openshift-operators | grep minio
+        echo '====================================='
+        kubectl logs -l app=minio -n tekton-results
       # command:
       #   - $(workspaces.source.path)/ci/images/ci-runner/hack/bin/run-plnsvc-setup.sh && which oc
