@@ -32,6 +32,6 @@ spec:
         $(workspaces.source.path)/ci/images/ci-runner/hack/bin/run-plnsvc-setup.sh
         echo "Installation completed"
         kubectl version
-        kubectl get csv -n openshift-operators | grep minio && exit 1
+        kubectl get csv -n openshift-operators | grep minio
       # command:
       #   - $(workspaces.source.path)/ci/images/ci-runner/hack/bin/run-plnsvc-setup.sh && which oc
