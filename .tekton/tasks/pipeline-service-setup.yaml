@@ -27,5 +27,10 @@ spec:
           value: $(params.repo_url)
         - name: REPO_REVISION
           value: $(params.revision)
-      command:
-        - $(workspaces.source.path)/ci/images/ci-runner/hack/bin/run-plnsvc-setup.sh && which oc
+      script: |
+        #!/usr/bin/env bash
+        $(workspaces.source.path)/ci/images/ci-runner/hack/bin/run-plnsvc-setup.sh
+        which oc
+
+      # command:
+      #   - $(workspaces.source.path)/ci/images/ci-runner/hack/bin/run-plnsvc-setup.sh && which oc
