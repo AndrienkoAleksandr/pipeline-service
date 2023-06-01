@@ -10,8 +10,8 @@ resources:
 
 images:
   - name: ko://github.com/tektoncd/results/cmd/api
-    newName: quay.io/redhat-appstudio/tekton-results-api
-    newTag: d384e7fec22bcd1b2c3e108a68cb32da4d4e6020
+    newName: docker.io/aandrienko/api-b1b7ffa9ba32f7c3020c3b68830b30a8
+    newTag: latest
   - name: ko://github.com/tektoncd/results/cmd/watcher
     newName: quay.io/redhat-appstudio/tekton-results-watcher
     newTag: d384e7fec22bcd1b2c3e108a68cb32da4d4e6020
