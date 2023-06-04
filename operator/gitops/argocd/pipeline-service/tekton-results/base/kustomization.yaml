@@ -10,7 +10,7 @@ resources:
 
 images:
   - name: ko://github.com/tektoncd/results/cmd/api
-    newName: docker.io/aandrienko/api:latest
+    newName: docker.io/aandrienko/api
     newTag: latest
   - name: ko://github.com/tektoncd/results/cmd/watcher
     newName: quay.io/redhat-appstudio/tekton-results-watcher
