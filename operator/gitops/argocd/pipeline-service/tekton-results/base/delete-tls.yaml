@@ -1,0 +1,19 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tekton-results-api
+  namespace: tekton-pipelines
+spec:
+  template:
+    spec:
+      containers:
+        - name: api
+          volumeMounts:
+            - mountPath: /etc/tls
+              name: tls
+              readOnly: true
+              $patch: delete
+      volumes:
+        - name: tls
+          $patch: delete
